@@ -1,1 +1,7 @@
-
+databaseChangeLog:
+  - include:
+      file: db/changelog/changes/schema/20250716-01-create-users-table.yaml
+  - include:
+      file: db/changelog/changes/schema/20250716-02-create-card-info-table.yaml
+  - include:
+      file: db/changelog/changes/indexes/20250716-03-create-index-card-info-user-id.yaml
