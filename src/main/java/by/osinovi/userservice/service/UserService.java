@@ -3,7 +3,6 @@ package by.osinovi.userservice.service;
 
 import by.osinovi.userservice.dto.UserRequestDto;
 import by.osinovi.userservice.dto.UserResponseDto;
-import by.osinovi.userservice.entity.User;
 
 import java.util.List;
 

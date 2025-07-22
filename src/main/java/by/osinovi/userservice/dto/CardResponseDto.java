@@ -10,4 +10,5 @@ public class CardResponseDto {
     private String number;
     private String holder;
     private LocalDate expirationDate;
+    private Integer userId;
 }

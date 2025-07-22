@@ -2,12 +2,11 @@ package by.osinovi.userservice.service;
 
 import by.osinovi.userservice.dto.CardRequestDto;
 import by.osinovi.userservice.dto.CardResponseDto;
-import by.osinovi.userservice.entity.Card;
 
 import java.util.List;
 
 public interface CardService {
-    void createCard(CardRequestDto cardRequestDto);
+    void createCard(String userId, CardRequestDto cardRequestDto);
 
     CardResponseDto getCardById(String id);
 
@@ -15,7 +14,7 @@ public interface CardService {
 
     List<CardResponseDto> getCardsByIds(List<String> ids);
 
-    void updateCard(String id, CardRequestDto cardRequestDto);
+    void updateCard(String id, String userId, CardRequestDto cardRequestDto);
 
-    void deleteCard(String cardNumber);
+    void deleteCard(String id);
 }

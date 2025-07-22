@@ -3,6 +3,7 @@ package by.osinovi.userservice.dto;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 public class UserResponseDto {
@@ -11,4 +12,5 @@ public class UserResponseDto {
     private String surname;
     private LocalDate birthDate;
     private String email;
+    private List<CardResponseDto> cards;
 }
