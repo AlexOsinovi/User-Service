@@ -1,20 +1,22 @@
 package by.osinovi.userservice.service;
 
 
+import by.osinovi.userservice.dto.UserRequestDto;
+import by.osinovi.userservice.dto.UserResponseDto;
 import by.osinovi.userservice.entity.User;
 
 import java.util.List;
 
 public interface UserService {
-    void createUser(User user);
+    void createUser(UserRequestDto userRequestDto);
 
-    User getUserById(String id);
+    UserResponseDto getUserById(String id);
 
-    List<User> getUsersByIds(List<String> ids);
+    List<UserResponseDto> getUsersByIds(List<String> ids);
 
-    User getUserByEmail(String email);
+    UserResponseDto getUserByEmail(String email);
 
-    void updateUser(String id, User user);
+    void updateUser(String id, UserRequestDto userRequestDto);
 
     void deleteUser(String id);
 }

@@ -1,0 +1,71 @@
+package by.osinovi.userservice.service.impl;
+
+import by.osinovi.userservice.dto.UserRequestDto;
+import by.osinovi.userservice.dto.UserResponseDto;
+import by.osinovi.userservice.entity.User;
+import by.osinovi.userservice.repository.UserRepository;
+import by.osinovi.userservice.service.UserService;
+import by.osinovi.userservice.mapper.UserMapper;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@AllArgsConstructor
+public class UserServiceImpl implements UserService {
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+
+    @Override
+    @Transactional
+    public void createUser(UserRequestDto userRequestDto) {
+        User user = userMapper.toEntity(userRequestDto);
+        userRepository.save(user);
+    }
+
+    @Override
+    public UserResponseDto getUserById(String id) {
+        User user = userRepository.findById(Integer.valueOf(id))
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    public List<UserResponseDto> getUsersByIds(List<String> ids) {
+        List<Integer> intIds = ids.stream().map(Integer::valueOf).collect(Collectors.toList());
+        List<User> users = userRepository.findUserByIdIn(intIds);
+        return users.stream().map(userMapper::toDto).collect(Collectors.toList());
+    }
+
+    @Override
+    public UserResponseDto getUserByEmail(String email) {
+        User user = userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateUser(String id, UserRequestDto userRequestDto) {
+        User existingUser = userRepository.findById(Integer.valueOf(id))
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+        User updatedUser = userMapper.toEntity(userRequestDto);
+        existingUser.setName(updatedUser.getName());
+        existingUser.setSurname(updatedUser.getSurname());
+        existingUser.setBirthDate(updatedUser.getBirthDate());
+        existingUser.setEmail(updatedUser.getEmail());
+        userRepository.save(existingUser);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(String id) {
+        User user = userRepository.findById(Integer.valueOf(id))
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+        userRepository.delete(user);
+    }
+}

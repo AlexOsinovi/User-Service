@@ -1,20 +1,21 @@
 package by.osinovi.userservice.service;
 
+import by.osinovi.userservice.dto.CardRequestDto;
+import by.osinovi.userservice.dto.CardResponseDto;
 import by.osinovi.userservice.entity.Card;
-import by.osinovi.userservice.entity.User;
 
 import java.util.List;
 
 public interface CardService {
-    void createCard(Card card);
+    void createCard(CardRequestDto cardRequestDto);
 
-    Card getCardById(String id);
+    CardResponseDto getCardById(String id);
 
-    List<Card> getCardsByUserId(String id);
+    List<CardResponseDto> getCardsByUserId(String id);
 
-    List<Card> getCardsByIds(List<String> ids);
+    List<CardResponseDto> getCardsByIds(List<String> ids);
 
-    void updateCard(String id, Card card);
+    void updateCard(String id, CardRequestDto cardRequestDto);
 
     void deleteCard(String cardNumber);
 }

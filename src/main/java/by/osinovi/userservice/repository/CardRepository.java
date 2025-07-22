@@ -16,4 +16,7 @@ public interface CardRepository extends JpaRepository<Card, Integer> {
 
     @Query("SELECT c FROM Card c WHERE c.id IN :ids")
     List<Card> findCardByIdIn(@Param("ids") List<Integer> ids);
+
+    @Query("SELECT c FROM Card c WHERE c.user.id = :userId")
+    List<Card> findCardsByUserId(@Param("userId") Integer userId);
 }
