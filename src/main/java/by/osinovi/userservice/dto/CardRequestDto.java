@@ -2,11 +2,17 @@ package by.osinovi.userservice.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CardRequestDto {
     @NotBlank(message = "Card number is required")
     @Size(max = 32, message = "Card number must not exceed 32 characters")

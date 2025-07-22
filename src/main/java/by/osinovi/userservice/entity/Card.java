@@ -24,7 +24,6 @@ import java.time.LocalDate;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-
 public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
