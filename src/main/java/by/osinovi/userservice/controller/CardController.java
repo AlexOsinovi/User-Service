@@ -41,11 +41,6 @@ public class CardController {
         return new ResponseEntity<>(cards, HttpStatus.OK);
     }
 
-    @GetMapping("/bulk")
-    public ResponseEntity<List<CardResponseDto>> getCardsByIds(@RequestParam List<String> ids) {
-        List<CardResponseDto> cards = cardService.getCardsByIds(ids);
-        return new ResponseEntity<>(cards, HttpStatus.OK);
-    }
 
     @PutMapping("/{id}/user/{userId}")
     public ResponseEntity<CardResponseDto> updateCard(@PathVariable String id, @PathVariable String userId, @Valid @RequestBody CardRequestDto cardRequestDto) {

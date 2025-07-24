@@ -38,6 +38,9 @@ public class UserServiceImpl implements UserService {
     public List<UserResponseDto> getUsersByIds(List<String> ids) {
         List<Integer> intIds = ids.stream().map(Integer::valueOf).collect(Collectors.toList());
         List<User> users = userRepository.findUserByIdIn(intIds);
+        if (users.isEmpty()) {
+            throw new UserNotFoundException("Ни один пользователь с ID " + String.join(", ", ids) + " не найден");
+        }
         return users.stream().map(userMapper::toDto).collect(Collectors.toList());
     }
 

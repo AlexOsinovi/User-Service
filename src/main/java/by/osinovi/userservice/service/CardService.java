@@ -12,8 +12,6 @@ public interface CardService {
 
     List<CardResponseDto> getCardsByUserId(String id);
 
-    List<CardResponseDto> getCardsByIds(List<String> ids);
-
     void updateCard(String id, String userId, CardRequestDto cardRequestDto);
 
     void deleteCard(String id);

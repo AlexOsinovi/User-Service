@@ -52,15 +52,13 @@ public class CardServiceImpl implements CardService {
     @Override
     public List<CardResponseDto> getCardsByUserId(String userId) {
         List<Card> cards = cardRepository.findCardsByUserId(Integer.valueOf(userId));
+        if (cards.isEmpty()) {
+            throw new CardNotFoundException("Нет ни одной карты по userId " + userId);
+        }
         return cards.stream().map(cardMapper::toDto).collect(Collectors.toList());
     }
 
-    @Override
-    public List<CardResponseDto> getCardsByIds(List<String> ids) {
-        List<Integer> intIds = ids.stream().map(Integer::valueOf).collect(Collectors.toList());
-        List<Card> cards = cardRepository.findCardByIdIn(intIds);
-        return cards.stream().map(cardMapper::toDto).collect(Collectors.toList());
-    }
+
 
     @Override
     @Transactional
