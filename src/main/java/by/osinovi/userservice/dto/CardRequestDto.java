@@ -1,6 +1,7 @@
 package by.osinovi.userservice.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -22,6 +23,6 @@ public class CardRequestDto {
     @Size(max = 128, message = "Holder must not exceed 128 characters")
     private String holder;
 
-    @NotBlank(message = "Expiration date is required")
+    @NotNull(message = "Expiration date is required")
     private LocalDate expirationDate;
 }

@@ -5,6 +5,7 @@ import by.osinovi.userservice.dto.CardResponseDto;
 import by.osinovi.userservice.entity.Card;
 import by.osinovi.userservice.entity.User;
 import by.osinovi.userservice.exception.CardNotFoundException;
+import by.osinovi.userservice.exception.InvalidInputException;
 import by.osinovi.userservice.exception.UserNotFoundException;
 import by.osinovi.userservice.mapper.CardMapper;
 import by.osinovi.userservice.repository.CardRepository;
@@ -29,6 +30,13 @@ public class CardServiceImpl implements CardService {
     public void createCard(String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Integer.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
+
+        String fullName = user.getName() + " " + user.getSurname();
+        String holder = cardRequestDto.getHolder().trim();
+        if (!holder.equalsIgnoreCase(fullName)) {
+            throw new InvalidInputException("Holder must match the user's full name: " + fullName);
+        }
+
         Card card = cardMapper.toEntity(cardRequestDto);
         card.setUser(user);
         cardRepository.save(card);
@@ -61,6 +69,13 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
         Card existingCard = cardRepository.findById(Integer.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
+
+        String fullName = user.getName() + " " + user.getSurname();
+        String holder = cardRequestDto.getHolder().trim();
+        if (!holder.equalsIgnoreCase(fullName)) {
+            throw new InvalidInputException("Holder must match the user's full name: " + fullName);
+        }
+
         Card updatedCard = cardMapper.toEntity(cardRequestDto);
         existingCard.setNumber(updatedCard.getNumber());
         existingCard.setHolder(updatedCard.getHolder());
