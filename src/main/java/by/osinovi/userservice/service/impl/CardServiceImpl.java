@@ -4,12 +4,13 @@ import by.osinovi.userservice.dto.CardRequestDto;
 import by.osinovi.userservice.dto.CardResponseDto;
 import by.osinovi.userservice.entity.Card;
 import by.osinovi.userservice.entity.User;
+import by.osinovi.userservice.exception.CardNotFoundException;
+import by.osinovi.userservice.exception.UserNotFoundException;
 import by.osinovi.userservice.mapper.CardMapper;
 import by.osinovi.userservice.repository.CardRepository;
 import by.osinovi.userservice.repository.UserRepository;
 import by.osinovi.userservice.service.CardService;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CardServiceImpl implements CardService {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
@@ -27,7 +28,7 @@ public class CardServiceImpl implements CardService {
     @Transactional
     public void createCard(String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Integer.valueOf(userId))
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
         Card card = cardMapper.toEntity(cardRequestDto);
         card.setUser(user);
         cardRepository.save(card);
@@ -36,7 +37,7 @@ public class CardServiceImpl implements CardService {
     @Override
     public CardResponseDto getCardById(String id) {
         Card card = cardRepository.findCardById(Integer.valueOf(id))
-                .orElseThrow(() -> new EntityNotFoundException("Card not found with id: " + id));
+                .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
         return cardMapper.toDto(card);
     }
 
@@ -57,9 +58,9 @@ public class CardServiceImpl implements CardService {
     @Transactional
     public void updateCard(String id, String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Integer.valueOf(userId))
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
         Card existingCard = cardRepository.findById(Integer.valueOf(id))
-                .orElseThrow(() -> new EntityNotFoundException("Card not found with id: " + id));
+                .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
         Card updatedCard = cardMapper.toEntity(cardRequestDto);
         existingCard.setNumber(updatedCard.getNumber());
         existingCard.setHolder(updatedCard.getHolder());
@@ -72,7 +73,7 @@ public class CardServiceImpl implements CardService {
     @Transactional
     public void deleteCard(String id) {
         Card card = cardRepository.findById(Integer.valueOf(id))
-                .orElseThrow(() -> new EntityNotFoundException("Card not found with number: " + id));
+                .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
         cardRepository.delete(card);
     }
 }
