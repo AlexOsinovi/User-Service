@@ -12,6 +12,9 @@ import by.osinovi.userservice.repository.CardRepository;
 import by.osinovi.userservice.repository.UserRepository;
 import by.osinovi.userservice.service.CardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +46,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Cacheable(value = "cards", key = "#id")
     public CardResponseDto getCardById(String id) {
         Card card = cardRepository.findCardById(Integer.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
@@ -50,6 +54,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Cacheable(value = "cards", key = "#userId")
     public List<CardResponseDto> getCardsByUserId(String userId) {
         List<Card> cards = cardRepository.findCardsByUserId(Integer.valueOf(userId));
         if (cards.isEmpty()) {
@@ -60,9 +65,9 @@ public class CardServiceImpl implements CardService {
 
 
 
-    @Override
     @Transactional
-    public void updateCard(String id, String userId, CardRequestDto cardRequestDto) {
+    @CachePut(value = "cards", key = "#id")
+    public CardResponseDto updateCard(String id, String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Integer.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
         Card existingCard = cardRepository.findById(Integer.valueOf(id))
@@ -80,10 +85,12 @@ public class CardServiceImpl implements CardService {
         existingCard.setExpirationDate(updatedCard.getExpirationDate());
         existingCard.setUser(user);
         cardRepository.save(existingCard);
+        return cardMapper.toDto(existingCard);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "cards", key = "#id")
     public void deleteCard(String id) {
         Card card = cardRepository.findById(Integer.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));

@@ -12,7 +12,7 @@ public interface CardService {
 
     List<CardResponseDto> getCardsByUserId(String id);
 
-    void updateCard(String id, String userId, CardRequestDto cardRequestDto);
+    CardResponseDto updateCard(String id, String userId, CardRequestDto cardRequestDto);
 
     void deleteCard(String id);
 }
