@@ -5,12 +5,14 @@ import by.osinovi.userservice.dto.CardResponseDto;
 import by.osinovi.userservice.entity.Card;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 
-@Mapper(componentModel = "spring", uses = UserMapper.class)
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CardMapper {
 
     Card toEntity(CardRequestDto dto);
 
-    @Mapping(target = "userId", expression = "java(entity.getUser().getId())")
+
+    @Mapping(source = "user.id", target = "userId")
     CardResponseDto toDto(Card entity);
 }
