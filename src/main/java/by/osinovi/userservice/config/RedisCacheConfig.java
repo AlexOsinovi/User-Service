@@ -4,6 +4,7 @@ import by.osinovi.userservice.dto.CardResponseDto;
 import by.osinovi.userservice.dto.UserResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -37,6 +38,11 @@ public class RedisCacheConfig {
                 .entryTtl(Duration.ofHours(1))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
                         new Jackson2JsonRedisSerializer<>(mapper, CardResponseDto.class))));
+
+        configs.put("usersList", RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(1))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+                        new GenericJackson2JsonRedisSerializer(mapper))));
 
         return RedisCacheManager.builder(connectionFactory)
                 .withInitialCacheConfigurations(configs)

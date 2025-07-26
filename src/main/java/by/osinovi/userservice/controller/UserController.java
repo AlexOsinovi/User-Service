@@ -30,7 +30,7 @@ public class UserController {
         return new ResponseEntity<>(userResponseDto, HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping(params = "ids")
     public ResponseEntity<List<UserResponseDto>> getUsersByIds(@RequestParam List<String> ids) {
         List<UserResponseDto> users = userService.getUsersByIds(ids);
         return new ResponseEntity<>(users, HttpStatus.OK);
