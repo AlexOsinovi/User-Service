@@ -44,6 +44,11 @@ public class RedisCacheConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
                         new GenericJackson2JsonRedisSerializer(mapper))));
 
+        configs.put("cardsList", RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(1))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(
+                        new GenericJackson2JsonRedisSerializer(mapper))));
+
         return RedisCacheManager.builder(connectionFactory)
                 .withInitialCacheConfigurations(configs)
                 .build();

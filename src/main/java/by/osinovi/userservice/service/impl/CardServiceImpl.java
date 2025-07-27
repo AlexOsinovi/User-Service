@@ -54,7 +54,7 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @Cacheable(value = "cards", key = "#userId")
+    @Cacheable(value = "cardsList", key = "#userId")
     public List<CardResponseDto> getCardsByUserId(String userId) {
         List<Card> cards = cardRepository.findCardsByUserId(Integer.valueOf(userId));
         if (cards.isEmpty()) {
