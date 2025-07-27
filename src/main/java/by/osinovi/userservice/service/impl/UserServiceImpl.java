@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Cacheable(value = "usersList", key = "#root.methodName + #ids")
+    @Cacheable(value = "usersList", key = "#ids")
     public List<UserResponseDto> getUsersByIds(List<String> ids) {
         List<Integer> intIds = ids.stream().map(Integer::valueOf).collect(Collectors.toList());
         List<User> users = userRepository.findUserByIdIn(intIds);
