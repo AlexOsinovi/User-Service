@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Cacheable(value = "users", key = "#id")
     public UserResponseDto getUserById(String id) {
-        User user = userRepository.findById(Integer.valueOf(id))
+        User user = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не найден"));
         return userMapper.toDto(user);
     }
@@ -42,8 +42,8 @@ public class UserServiceImpl implements UserService {
     @Override
     @Cacheable(value = "usersList", key = "#ids")
     public List<UserResponseDto> getUsersByIds(List<String> ids) {
-        List<Integer> intIds = ids.stream().map(Integer::valueOf).collect(Collectors.toList());
-        List<User> users = userRepository.findUserByIdIn(intIds);
+        List<Long> longIds = ids.stream().map(Long::valueOf).collect(Collectors.toList());
+        List<User> users = userRepository.findUserByIdIn(longIds);
         if (users.isEmpty()) {
             throw new UserNotFoundException("Ни один пользователь с ID " + String.join(", ", ids) + " не найден");
         }
@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @CachePut(value = "users", key = "#id")
     public UserResponseDto updateUser(String id, UserRequestDto userRequestDto) {
-        User existingUser = userRepository.findById(Integer.valueOf(id))
+        User existingUser = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не найден"));
         User updatedUser = userMapper.toEntity(userRequestDto);
         existingUser.setName(updatedUser.getName());
@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @CacheEvict(value = "users", key = "#id")
     public void deleteUser(String id) {
-        User user = userRepository.findById(Integer.valueOf(id))
+        User user = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не найден"));
         userRepository.delete(user);
     }

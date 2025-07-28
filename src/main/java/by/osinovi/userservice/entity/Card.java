@@ -27,16 +27,16 @@ import java.time.LocalDate;
 public class Card {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_card_info_users"))
     private User user;
 
-    @Column(name = "number", nullable = false, length = 32)
+    @Column(name = "number", nullable = false, length = 16)
     private String number;
 
-    @Column(name = "holder", nullable = false, length = 128)
+    @Column(name = "holder", nullable = false, length = 65)
     private String holder;
 
     @Column(name = "expiration_date", nullable = false)

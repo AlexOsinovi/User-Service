@@ -12,11 +12,9 @@ import java.util.Optional;
 @Repository
 public interface CardRepository extends JpaRepository<Card, Integer> {
 
-    Optional<Card> findCardById(Integer id);
 
-    @Query("SELECT c FROM Card c WHERE c.id IN :ids")
-    List<Card> findCardByIdIn(@Param("ids") List<Integer> ids);
+    Optional<Card> findById(Long id);
 
     @Query("SELECT c FROM Card c WHERE c.user.id = :userId")
-    List<Card> findCardsByUserId(@Param("userId") Integer userId);
+    List<Card> findCardsByUserId(@Param("userId") Long userId);
 }

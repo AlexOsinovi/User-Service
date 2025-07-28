@@ -31,7 +31,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Transactional
     public CardResponseDto createCard(String userId, CardRequestDto cardRequestDto) {
-        User user = userRepository.findById(Integer.valueOf(userId))
+        User user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
 
         String fullName = user.getName() + " " + user.getSurname();
@@ -49,7 +49,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Cacheable(value = "cards", key = "#id")
     public CardResponseDto getCardById(String id) {
-        Card card = cardRepository.findCardById(Integer.valueOf(id))
+        Card card = cardRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
         return cardMapper.toDto(card);
     }
@@ -57,7 +57,7 @@ public class CardServiceImpl implements CardService {
     @Override
     @Cacheable(value = "cardsList", key = "#userId")
     public List<CardResponseDto> getCardsByUserId(String userId) {
-        List<Card> cards = cardRepository.findCardsByUserId(Integer.valueOf(userId));
+        List<Card> cards = cardRepository.findCardsByUserId(Long.valueOf(userId));
         if (cards.isEmpty()) {
             throw new CardNotFoundException("Нет ни одной карты по userId " + userId);
         }
@@ -69,12 +69,12 @@ public class CardServiceImpl implements CardService {
     @Transactional
     @CachePut(value = "cards", key = "#id")
     public CardResponseDto updateCard(String id, String userId, CardRequestDto cardRequestDto) {
-        User user = userRepository.findById(Integer.valueOf(userId))
+        User user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
-        Card existingCard = cardRepository.findById(Integer.valueOf(id))
+        Card existingCard = cardRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
 
-        String fullName = user.getName() + " " + user.getSurname();
+        String fullName = user.getName().toUpperCase() + " " + user.getSurname().toUpperCase();
         String holder = cardRequestDto.getHolder().trim();
         if (!holder.equalsIgnoreCase(fullName)) {
             throw new InvalidInputException("Holder must match the user's full name: " + fullName);
@@ -93,7 +93,7 @@ public class CardServiceImpl implements CardService {
     @Transactional
     @CacheEvict(value = "cards", key = "#id")
     public void deleteCard(String id) {
-        Card card = cardRepository.findById(Integer.valueOf(id))
+        Card card = cardRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
         cardRepository.delete(card);
     }

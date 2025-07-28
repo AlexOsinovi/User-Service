@@ -12,8 +12,11 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {
 
+
+    Optional<User> findById(Long lon);
+
     Optional<User> findUserByEmail(String email);
 
     @Query(value = "SELECT * FROM users WHERE id in :ids", nativeQuery = true)
-    List<User> findUserByIdIn(@Param("ids") List<Integer> ids);
+    List<User> findUserByIdIn(@Param("ids") List<Long> ids);
 }

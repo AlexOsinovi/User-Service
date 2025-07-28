@@ -2,6 +2,7 @@ package by.osinovi.userservice.dto.card;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,11 +17,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class CardRequestDto {
     @NotBlank(message = "Card number is required")
-    @Size(max = 32, message = "Card number must not exceed 32 characters")
+    @Size(min = 16, max = 16, message = "The number must contain 16 characters")
     private String number;
 
     @NotBlank(message = "Holder is required")
-    @Size(max = 128, message = "Holder must not exceed 128 characters")
+    @Pattern(regexp = "^[A-Z]{1,32}\\s[A-Z]{1,32}$", message = "The holder must contain only uppercase letters and follow the pattern: NAME SURNAME")
     private String holder;
 
     @NotNull(message = "Expiration date is required")

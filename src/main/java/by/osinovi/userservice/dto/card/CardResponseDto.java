@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CardResponseDto {
-    private Integer id;
+    private Long id;
     private String number;
     private String holder;
     private LocalDate expirationDate;

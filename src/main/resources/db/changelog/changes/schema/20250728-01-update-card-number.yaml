@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250728-01
+      author: aleksei osinovi
+      comment: Update number column length to 16 in card_info table
+      changes:
+        - modifyDataType:
+            tableName: card_info
+            columnName: number
+            newDataType: varchar(16)

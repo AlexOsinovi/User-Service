@@ -17,11 +17,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class UserRequestDto {
     @NotBlank(message = "Name is required")
-    @Size(max = 64, message = "Name must not exceed 64 characters")
+    @Size(max = 32, message = "Name must not exceed 64 characters")
     private String name;
 
     @NotBlank(message = "Surname is required")
-    @Size(max = 64, message = "Surname must not exceed 64 characters")
+    @Size(max = 32, message = "Surname must not exceed 64 characters")
     private String surname;
 
     private LocalDate birthDate;

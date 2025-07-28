@@ -29,12 +29,12 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    @Column(name = "name", nullable = false, length = 64)
+    @Column(name = "name", nullable = false, length = 32)
     private String name;
 
-    @Column(name = "surname", nullable = false, length = 64)
+    @Column(name = "surname", nullable = false, length = 32)
     private String surname;
 
     @Column(name = "birth_date")
