@@ -30,5 +30,4 @@ public class UserRequestDto {
     @Email(message = "Email should be valid")
     @Size(max = 128, message = "Email must not exceed 128 characters")
     private String email;
-
 }

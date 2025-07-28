@@ -22,7 +22,6 @@ import java.util.Map;
 @EnableCaching
 public class RedisCacheConfig {
 
-
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         ObjectMapper mapper = new ObjectMapper();

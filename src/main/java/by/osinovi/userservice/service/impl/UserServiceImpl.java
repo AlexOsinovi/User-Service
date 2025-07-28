@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users", key = "#id")
     public UserResponseDto getUserById(String id) {
         User user = userRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не найден"));
+                .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
         return userMapper.toDto(user);
     }
 
@@ -44,9 +44,11 @@ public class UserServiceImpl implements UserService {
     public List<UserResponseDto> getUsersByIds(List<String> ids) {
         List<Long> longIds = ids.stream().map(Long::valueOf).collect(Collectors.toList());
         List<User> users = userRepository.findUserByIdIn(longIds);
+
         if (users.isEmpty()) {
-            throw new UserNotFoundException("Ни один пользователь с ID " + String.join(", ", ids) + " не найден");
+            throw new UserNotFoundException("No users found with IDs " + String.join(", ", ids));
         }
+
         return users.stream().map(userMapper::toDto).collect(Collectors.toList());
     }
 
@@ -54,7 +56,7 @@ public class UserServiceImpl implements UserService {
     @Cacheable(value = "users", key = "#email")
     public UserResponseDto getUserByEmail(String email) {
         User user = userRepository.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с email " + email + " не найден"));
+                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
         return userMapper.toDto(user);
     }
 
@@ -63,7 +65,7 @@ public class UserServiceImpl implements UserService {
     @CachePut(value = "users", key = "#id")
     public UserResponseDto updateUser(String id, UserRequestDto userRequestDto) {
         User existingUser = userRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не найден"));
+                .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
         User updatedUser = userMapper.toEntity(userRequestDto);
         existingUser.setName(updatedUser.getName());
         existingUser.setSurname(updatedUser.getSurname());
@@ -78,7 +80,7 @@ public class UserServiceImpl implements UserService {
     @CacheEvict(value = "users", key = "#id")
     public void deleteUser(String id) {
         User user = userRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не найден"));
+                .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
         userRepository.delete(user);
     }
 }

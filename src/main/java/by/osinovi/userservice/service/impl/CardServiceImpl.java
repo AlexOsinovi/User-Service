@@ -32,10 +32,10 @@ public class CardServiceImpl implements CardService {
     @Transactional
     public CardResponseDto createCard(String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Long.valueOf(userId))
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
 
         if (cardRepository.existsByNumber(cardRequestDto.getNumber())) {
-            throw new InvalidInputException("Карта с номером " + cardRequestDto.getNumber() + " уже существует");
+            throw new InvalidInputException("Card with number " + cardRequestDto.getNumber() + " already exists");
         }
 
         String fullName = user.getName() + " " + user.getSurname();
@@ -54,7 +54,7 @@ public class CardServiceImpl implements CardService {
     @Cacheable(value = "cards", key = "#id")
     public CardResponseDto getCardById(String id) {
         Card card = cardRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
+                .orElseThrow(() -> new CardNotFoundException("Card with id " + id + " not found"));
         return cardMapper.toDto(card);
     }
 
@@ -63,23 +63,22 @@ public class CardServiceImpl implements CardService {
     public List<CardResponseDto> getCardsByUserId(String userId) {
         List<Card> cards = cardRepository.findCardsByUserId(Long.valueOf(userId));
         if (cards.isEmpty()) {
-            throw new CardNotFoundException("Нет ни одной карты по userId " + userId);
+            throw new CardNotFoundException("No cards found for userId " + userId);
         }
         return cards.stream().map(cardMapper::toDto).collect(Collectors.toList());
     }
-
 
     @Transactional
     @CachePut(value = "cards", key = "#id")
     public CardResponseDto updateCard(String id, String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Long.valueOf(userId))
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
         Card existingCard = cardRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
+                .orElseThrow(() -> new CardNotFoundException("Card with id " + id + " not found"));
 
         if (!existingCard.getNumber().equals(cardRequestDto.getNumber()) &&
                 cardRepository.existsByNumber(cardRequestDto.getNumber())) {
-            throw new IllegalArgumentException("Карта с номером " + cardRequestDto.getNumber() + " уже существует");
+            throw new IllegalArgumentException("Card with number " + cardRequestDto.getNumber() + " already exists");
         }
 
         String fullName = user.getName().toUpperCase() + " " + user.getSurname().toUpperCase();
@@ -102,7 +101,7 @@ public class CardServiceImpl implements CardService {
     @CacheEvict(value = "cards", key = "#id")
     public void deleteCard(String id) {
         Card card = cardRepository.findById(Long.valueOf(id))
-                .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
+                .orElseThrow(() -> new CardNotFoundException("Card with id " + id + " not found"));
         cardRepository.delete(card);
     }
 }

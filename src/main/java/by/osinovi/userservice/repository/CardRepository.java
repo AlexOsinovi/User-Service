@@ -11,8 +11,6 @@ import java.util.Optional;
 
 @Repository
 public interface CardRepository extends JpaRepository<Card, Integer> {
-
-
     Optional<Card> findById(Long id);
 
     @Query("SELECT c FROM Card c WHERE c.user.id = :userId")

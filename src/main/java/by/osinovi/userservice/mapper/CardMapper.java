@@ -12,7 +12,6 @@ public interface CardMapper {
 
     Card toEntity(CardRequestDto dto);
 
-
     @Mapping(source = "user.id", target = "userId")
     CardResponseDto toDto(Card entity);
 }
