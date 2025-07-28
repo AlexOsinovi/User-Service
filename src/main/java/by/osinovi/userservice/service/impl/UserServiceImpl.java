@@ -1,7 +1,7 @@
 package by.osinovi.userservice.service.impl;
 
-import by.osinovi.userservice.dto.UserRequestDto;
-import by.osinovi.userservice.dto.UserResponseDto;
+import by.osinovi.userservice.dto.user.UserRequestDto;
+import by.osinovi.userservice.dto.user.UserResponseDto;
 import by.osinovi.userservice.entity.User;
 import by.osinovi.userservice.exception.UserNotFoundException;
 import by.osinovi.userservice.mapper.UserMapper;

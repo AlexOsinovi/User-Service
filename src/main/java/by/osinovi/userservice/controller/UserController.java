@@ -1,7 +1,7 @@
 package by.osinovi.userservice.controller;
 
-import by.osinovi.userservice.dto.UserRequestDto;
-import by.osinovi.userservice.dto.UserResponseDto;
+import by.osinovi.userservice.dto.user.UserRequestDto;
+import by.osinovi.userservice.dto.user.UserResponseDto;
 import by.osinovi.userservice.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

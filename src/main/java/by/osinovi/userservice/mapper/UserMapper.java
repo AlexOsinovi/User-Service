@@ -1,7 +1,7 @@
 package by.osinovi.userservice.mapper;
 
-import by.osinovi.userservice.dto.UserRequestDto;
-import by.osinovi.userservice.dto.UserResponseDto;
+import by.osinovi.userservice.dto.user.UserRequestDto;
+import by.osinovi.userservice.dto.user.UserResponseDto;
 import by.osinovi.userservice.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;

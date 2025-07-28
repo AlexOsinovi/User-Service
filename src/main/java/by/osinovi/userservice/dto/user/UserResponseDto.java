@@ -1,5 +1,6 @@
-package by.osinovi.userservice.dto;
+package by.osinovi.userservice.dto.user;
 
+import by.osinovi.userservice.dto.card.CardResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

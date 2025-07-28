@@ -1,7 +1,7 @@
 package by.osinovi.userservice.service.impl;
 
-import by.osinovi.userservice.dto.CardRequestDto;
-import by.osinovi.userservice.dto.CardResponseDto;
+import by.osinovi.userservice.dto.card.CardRequestDto;
+import by.osinovi.userservice.dto.card.CardResponseDto;
 import by.osinovi.userservice.entity.Card;
 import by.osinovi.userservice.entity.User;
 import by.osinovi.userservice.exception.CardNotFoundException;

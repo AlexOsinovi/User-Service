@@ -1,4 +1,4 @@
-package by.osinovi.userservice.dto;
+package by.osinovi.userservice.dto.card;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

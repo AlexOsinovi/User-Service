@@ -1,4 +1,4 @@
-package by.osinovi.userservice.dto;
+package by.osinovi.userservice.dto.user;
 
 
 import jakarta.validation.constraints.Email;

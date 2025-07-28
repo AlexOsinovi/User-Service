@@ -1,8 +1,7 @@
 package by.osinovi.userservice.controller;
 
-import by.osinovi.userservice.dto.CardRequestDto;
-import by.osinovi.userservice.dto.CardResponseDto;
-import by.osinovi.userservice.exception.CardNotFoundException;
+import by.osinovi.userservice.dto.card.CardRequestDto;
+import by.osinovi.userservice.dto.card.CardResponseDto;
 import by.osinovi.userservice.service.CardService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

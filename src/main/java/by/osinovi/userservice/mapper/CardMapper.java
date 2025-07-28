@@ -1,7 +1,7 @@
 package by.osinovi.userservice.mapper;
 
-import by.osinovi.userservice.dto.CardRequestDto;
-import by.osinovi.userservice.dto.CardResponseDto;
+import by.osinovi.userservice.dto.card.CardRequestDto;
+import by.osinovi.userservice.dto.card.CardResponseDto;
 import by.osinovi.userservice.entity.Card;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

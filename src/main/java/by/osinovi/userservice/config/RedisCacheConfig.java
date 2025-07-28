@@ -1,7 +1,7 @@
 package by.osinovi.userservice.config;
 
-import by.osinovi.userservice.dto.CardResponseDto;
-import by.osinovi.userservice.dto.UserResponseDto;
+import by.osinovi.userservice.dto.card.CardResponseDto;
+import by.osinovi.userservice.dto.user.UserResponseDto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;

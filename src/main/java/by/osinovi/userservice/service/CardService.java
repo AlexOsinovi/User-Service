@@ -1,7 +1,7 @@
 package by.osinovi.userservice.service;
 
-import by.osinovi.userservice.dto.CardRequestDto;
-import by.osinovi.userservice.dto.CardResponseDto;
+import by.osinovi.userservice.dto.card.CardRequestDto;
+import by.osinovi.userservice.dto.card.CardResponseDto;
 
 import java.util.List;
 
