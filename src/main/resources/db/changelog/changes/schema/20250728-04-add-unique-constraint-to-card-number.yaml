@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250728-04
+      author: aleksei osinovi
+      comment: Add unique constraint to number column in card_info table
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - uniqueConstraintExists:
+                tableName: card_info
+                columnNames: number
+      changes:
+        - addUniqueConstraint:
+            tableName: card_info
+            columnNames: number
+            constraintName: uk_card_info_number
+      rollback:
+        - dropUniqueConstraint:
+            tableName: card_info
+            constraintName: uk_card_info_number

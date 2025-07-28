@@ -33,7 +33,7 @@ public class Card {
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_card_info_users"))
     private User user;
 
-    @Column(name = "number", nullable = false, length = 16)
+    @Column(name = "number", nullable = false, unique = true, length = 16)
     private String number;
 
     @Column(name = "holder", nullable = false, length = 65)

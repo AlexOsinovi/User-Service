@@ -11,4 +11,6 @@ databaseChangeLog:
       file: db/changelog/changes/schema/20250728-02-clear-users-and-cards.yaml
   - include:
       file: db/changelog/changes/schema/20250728-03-update-tables-for-entities.yaml
+  - include:
+      file: db/changelog/changes/schema/20250728-04-add-unique-constraint-to-card-number.yaml
 

@@ -17,7 +17,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class CardRequestDto {
     @NotBlank(message = "Card number is required")
-    @Size(min = 16, max = 16, message = "The number must contain 16 characters")
+    @Pattern(regexp = "\\d{16}", message = "Card number must contain 16 digits")
     private String number;
 
     @NotBlank(message = "Holder is required")

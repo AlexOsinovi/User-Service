@@ -34,6 +34,10 @@ public class CardServiceImpl implements CardService {
         User user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
 
+        if (cardRepository.existsByNumber(cardRequestDto.getNumber())) {
+            throw new InvalidInputException("Карта с номером " + cardRequestDto.getNumber() + " уже существует");
+        }
+
         String fullName = user.getName() + " " + user.getSurname();
         String holder = cardRequestDto.getHolder().trim();
         if (!holder.equalsIgnoreCase(fullName)) {
@@ -65,7 +69,6 @@ public class CardServiceImpl implements CardService {
     }
 
 
-
     @Transactional
     @CachePut(value = "cards", key = "#id")
     public CardResponseDto updateCard(String id, String userId, CardRequestDto cardRequestDto) {
@@ -73,6 +76,11 @@ public class CardServiceImpl implements CardService {
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
         Card existingCard = cardRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Карта с id " + id + " не найдена"));
+
+        if (!existingCard.getNumber().equals(cardRequestDto.getNumber()) &&
+                cardRepository.existsByNumber(cardRequestDto.getNumber())) {
+            throw new IllegalArgumentException("Карта с номером " + cardRequestDto.getNumber() + " уже существует");
+        }
 
         String fullName = user.getName().toUpperCase() + " " + user.getSurname().toUpperCase();
         String holder = cardRequestDto.getHolder().trim();
