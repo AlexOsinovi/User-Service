@@ -6,7 +6,7 @@ import by.osinovi.userservice.dto.CardResponseDto;
 import java.util.List;
 
 public interface CardService {
-    void createCard(String userId, CardRequestDto cardRequestDto);
+    CardResponseDto createCard(String userId, CardRequestDto cardRequestDto);
 
     CardResponseDto getCardById(String id);
 

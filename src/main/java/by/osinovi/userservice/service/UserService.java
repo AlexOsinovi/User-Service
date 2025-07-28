@@ -7,7 +7,7 @@ import by.osinovi.userservice.dto.UserResponseDto;
 import java.util.List;
 
 public interface UserService {
-    void createUser(UserRequestDto userRequestDto);
+    UserResponseDto createUser(UserRequestDto userRequestDto);
 
     UserResponseDto getUserById(String id);
 

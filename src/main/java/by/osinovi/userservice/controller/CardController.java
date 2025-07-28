@@ -20,38 +20,28 @@ public class CardController {
 
     @PostMapping("/user/{userId}")
     public ResponseEntity<CardResponseDto> createCard(@PathVariable String userId, @Valid @RequestBody CardRequestDto cardRequestDto) {
-        cardService.createCard(userId, cardRequestDto);
-        List<CardResponseDto> cards = cardService.getCardsByUserId(userId);
-        CardResponseDto createdCard = cards.stream()
-                .filter(card -> card.getNumber().equals(cardRequestDto.getNumber()))
-                .findFirst()
-                .orElseThrow(() -> new CardNotFoundException("Не удалось получить созданную карту"));
-        return new ResponseEntity<>(createdCard, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(cardService.createCard(userId, cardRequestDto));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CardResponseDto> getCardById(@PathVariable String id) {
-        CardResponseDto cardResponseDto = cardService.getCardById(id);
-        return new ResponseEntity<>(cardResponseDto, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(cardService.getCardById(id));
     }
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<CardResponseDto>> getCardsByUserId(@PathVariable String userId) {
-        List<CardResponseDto> cards = cardService.getCardsByUserId(userId);
-        return new ResponseEntity<>(cards, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(cardService.getCardsByUserId(userId));
     }
 
 
     @PutMapping("/{id}/user/{userId}")
     public ResponseEntity<CardResponseDto> updateCard(@PathVariable String id, @PathVariable String userId, @Valid @RequestBody CardRequestDto cardRequestDto) {
-        cardService.updateCard(id, userId, cardRequestDto);
-        CardResponseDto cardResponseDto = cardService.getCardById(id);
-        return new ResponseEntity<>(cardResponseDto, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(cardService.updateCard(id, userId, cardRequestDto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCard(@PathVariable String id) {
         cardService.deleteCard(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

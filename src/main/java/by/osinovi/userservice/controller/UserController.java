@@ -19,39 +19,32 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserRequestDto userRequestDto) {
-        userService.createUser(userRequestDto);
-        UserResponseDto userResponseDto = userService.getUserByEmail(userRequestDto.getEmail());
-        return new ResponseEntity<>(userResponseDto, HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(userRequestDto));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable String id) {
-        UserResponseDto userResponseDto = userService.getUserById(id);
-        return new ResponseEntity<>(userResponseDto, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getUserById(id));
     }
 
     @GetMapping(params = "ids")
     public ResponseEntity<List<UserResponseDto>> getUsersByIds(@RequestParam List<String> ids) {
-        List<UserResponseDto> users = userService.getUsersByIds(ids);
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(userService.getUsersByIds(ids));
     }
 
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponseDto> getUserByEmail(@PathVariable String email) {
-        UserResponseDto userResponseDto = userService.getUserByEmail(email);
-        return new ResponseEntity<>(userResponseDto, HttpStatus.OK);
+        return  ResponseEntity.status(HttpStatus.OK).body(userService.getUserByEmail(email));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDto> updateUser(@PathVariable String id, @Valid @RequestBody UserRequestDto userRequestDto) {
-        userService.updateUser(id, userRequestDto);
-        UserResponseDto userResponseDto = userService.getUserById(id);
-        return new ResponseEntity<>(userResponseDto, HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK).body(userService.updateUser(id, userRequestDto));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

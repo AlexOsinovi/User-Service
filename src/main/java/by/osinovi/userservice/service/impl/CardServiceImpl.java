@@ -30,7 +30,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
-    public void createCard(String userId, CardRequestDto cardRequestDto) {
+    public CardResponseDto createCard(String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Integer.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не найден"));
 
@@ -43,6 +43,7 @@ public class CardServiceImpl implements CardService {
         Card card = cardMapper.toEntity(cardRequestDto);
         card.setUser(user);
         cardRepository.save(card);
+        return cardMapper.toDto(card);
     }
 
     @Override
