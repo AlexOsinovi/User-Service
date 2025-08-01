@@ -10,11 +10,10 @@ import by.osinovi.userservice.exception.UserNotFoundException;
 import by.osinovi.userservice.mapper.CardMapper;
 import by.osinovi.userservice.repository.CardRepository;
 import by.osinovi.userservice.repository.UserRepository;
+import by.osinovi.userservice.config.CardCacheManager;
+import by.osinovi.userservice.config.UserCacheManager;
 import by.osinovi.userservice.service.CardService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,10 +26,11 @@ public class CardServiceImpl implements CardService {
     private final CardRepository cardRepository;
     private final CardMapper cardMapper;
     private final UserRepository userRepository;
+    private final CardCacheManager cardCacheManager;
+    private final UserCacheManager userCacheManager;
 
     @Override
     @Transactional
-    @CacheEvict(value = "users", key = "#result.userId")
     public CardResponseDto createCard(String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
@@ -48,15 +48,23 @@ public class CardServiceImpl implements CardService {
         Card card = cardMapper.toEntity(cardRequestDto);
         card.setUser(user);
         cardRepository.save(card);
-        return cardMapper.toDto(card);
+        CardResponseDto response = cardMapper.toDto(card);
+        cardCacheManager.cacheCard(String.valueOf(card.getId()), response);
+        userCacheManager.evictUser(userId, user.getEmail());
+        return response;
     }
 
     @Override
-    @Cacheable(value = "cards", key = "#id")
     public CardResponseDto getCardById(String id) {
+        CardResponseDto cached = cardCacheManager.getCard(id);
+        if (cached != null) {
+            return cached;
+        }
         Card card = cardRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Card with id " + id + " not found"));
-        return cardMapper.toDto(card);
+        CardResponseDto response = cardMapper.toDto(card);
+        cardCacheManager.cacheCard(id, response);
+        return response;
     }
 
     @Override
@@ -68,9 +76,8 @@ public class CardServiceImpl implements CardService {
         return cards.stream().map(cardMapper::toDto).collect(Collectors.toList());
     }
 
+    @Override
     @Transactional
-    @CachePut(value = "cards", key = "#id")
-    @CacheEvict(value = "users", key = "result.userId")
     public CardResponseDto updateCard(String id, String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
@@ -94,15 +101,20 @@ public class CardServiceImpl implements CardService {
         existingCard.setExpirationDate(updatedCard.getExpirationDate());
         existingCard.setUser(user);
         cardRepository.save(existingCard);
-        return cardMapper.toDto(existingCard);
+        CardResponseDto response = cardMapper.toDto(existingCard);
+        cardCacheManager.cacheCard(id, response);
+        userCacheManager.evictUser(userId, user.getEmail());
+        return response;
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = "cards", key = "#id")
     public void deleteCard(String id) {
         Card card = cardRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new CardNotFoundException("Card with id " + id + " not found"));
+        cardCacheManager.evictCard(id);
+        userCacheManager.evictUser(String.valueOf(card.getUser().getId()), String.valueOf(card.getUser().getEmail()));
         cardRepository.delete(card);
     }
+
 }

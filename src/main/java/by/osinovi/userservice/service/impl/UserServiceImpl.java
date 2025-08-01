@@ -6,11 +6,9 @@ import by.osinovi.userservice.entity.User;
 import by.osinovi.userservice.exception.UserNotFoundException;
 import by.osinovi.userservice.mapper.UserMapper;
 import by.osinovi.userservice.repository.UserRepository;
+import by.osinovi.userservice.config.UserCacheManager;
 import by.osinovi.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,65 +20,81 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final UserCacheManager userCacheManager;
 
     @Override
     @Transactional
     public UserResponseDto createUser(UserRequestDto userRequestDto) {
         User user = userMapper.toEntity(userRequestDto);
         userRepository.save(user);
-        return userMapper.toDto(user);
+        UserResponseDto response = userMapper.toDto(user);
+        userCacheManager.cacheUser(String.valueOf(user.getId()), user.getEmail(), response);
+        return response;
     }
 
     @Override
-    @Cacheable(value = "users", key = "#id")
     public UserResponseDto getUserById(String id) {
+        UserResponseDto cached = userCacheManager.getUserById(id);
+        if (cached != null) {
+            return cached;
+        }
         User user = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
-        return userMapper.toDto(user);
+        UserResponseDto response = userMapper.toDto(user);
+        userCacheManager.cacheUser(id, user.getEmail(), response);
+        return response;
+    }
+
+    @Override
+    public UserResponseDto getUserByEmail(String email) {
+        UserResponseDto cached = userCacheManager.getUserByEmail(email);
+        if (cached != null) {
+            return cached;
+        }
+        User user = userRepository.findUserByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
+        UserResponseDto response = userMapper.toDto(user);
+        userCacheManager.cacheUser(String.valueOf(user.getId()), email, response);
+        return response;
     }
 
     @Override
     public List<UserResponseDto> getUsersByIds(List<String> ids) {
         List<Long> longIds = ids.stream().map(Long::valueOf).collect(Collectors.toList());
         List<User> users = userRepository.findUserByIdIn(longIds);
-
         if (users.isEmpty()) {
             throw new UserNotFoundException("No users found with IDs " + String.join(", ", ids));
         }
-
         return users.stream().map(userMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
-    @Cacheable(value = "users", key = "#email")
-    public UserResponseDto getUserByEmail(String email) {
-        User user = userRepository.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User with email " + email + " not found"));
-        return userMapper.toDto(user);
-    }
-
-    @Override
     @Transactional
-    @CachePut(value = "users", key = "#id")
-    @CacheEvict(value = "users", key = "#result.email")
     public UserResponseDto updateUser(String id, UserRequestDto userRequestDto) {
         User existingUser = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        String oldEmail = existingUser.getEmail();
         User updatedUser = userMapper.toEntity(userRequestDto);
         existingUser.setName(updatedUser.getName());
         existingUser.setSurname(updatedUser.getSurname());
         existingUser.setBirthDate(updatedUser.getBirthDate());
         existingUser.setEmail(updatedUser.getEmail());
         userRepository.save(existingUser);
-        return userMapper.toDto(existingUser);
+        UserResponseDto response = userMapper.toDto(existingUser);
+        userCacheManager.cacheUser(id, existingUser.getEmail(), response);
+        if (!oldEmail.equals(existingUser.getEmail())) {
+            userCacheManager.evictUser(id, oldEmail);
+        }
+        return response;
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = "users", key = "#id")
     public void deleteUser(String id) {
         User user = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        userCacheManager.evictUser(id, user.getEmail());
         userRepository.delete(user);
     }
+
 }

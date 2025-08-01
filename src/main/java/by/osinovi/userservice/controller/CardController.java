@@ -32,7 +32,6 @@ public class CardController {
         return ResponseEntity.status(HttpStatus.OK).body(cardService.getCardsByUserId(userId));
     }
 
-
     @PutMapping("/{id}/user/{userId}")
     public ResponseEntity<CardResponseDto> updateCard(@PathVariable String id, @PathVariable String userId, @Valid @RequestBody CardRequestDto cardRequestDto) {
         return ResponseEntity.status(HttpStatus.OK).body(cardService.updateCard(id, userId, cardRequestDto));
