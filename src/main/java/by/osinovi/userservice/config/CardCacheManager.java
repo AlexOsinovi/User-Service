@@ -30,7 +30,7 @@ public class CardCacheManager {
     public CardResponseDto getCard(String id) {
         String key = CACHE_PREFIX + id;
         CardResponseDto cached = redisTemplate.opsForValue().get(key);
-        log.debug("Cache hit for card id: {}, result: true", id);
+        log.debug("Cache hit for card id: {}, result: {}", id, cached != null);
         return cached;
 
     }
