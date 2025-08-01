@@ -40,7 +40,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Cacheable(value = "usersList", key = "#ids")
     public List<UserResponseDto> getUsersByIds(List<String> ids) {
         List<Long> longIds = ids.stream().map(Long::valueOf).collect(Collectors.toList());
         List<User> users = userRepository.findUserByIdIn(longIds);
@@ -63,6 +62,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     @CachePut(value = "users", key = "#id")
+    @CacheEvict(value = "users", key = "#result.email")
     public UserResponseDto updateUser(String id, UserRequestDto userRequestDto) {
         User existingUser = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));

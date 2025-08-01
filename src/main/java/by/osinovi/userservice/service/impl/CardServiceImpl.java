@@ -30,6 +30,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "users", key = "#result.userId")
     public CardResponseDto createCard(String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
@@ -59,7 +60,6 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
-    @Cacheable(value = "cardsList", key = "#userId")
     public List<CardResponseDto> getCardsByUserId(String userId) {
         List<Card> cards = cardRepository.findCardsByUserId(Long.valueOf(userId));
         if (cards.isEmpty()) {
@@ -70,6 +70,7 @@ public class CardServiceImpl implements CardService {
 
     @Transactional
     @CachePut(value = "cards", key = "#id")
+    @CacheEvict(value = "users", key = "result.userId")
     public CardResponseDto updateCard(String id, String userId, CardRequestDto cardRequestDto) {
         User user = userRepository.findById(Long.valueOf(userId))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found"));
