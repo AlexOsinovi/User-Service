@@ -3,6 +3,7 @@ package by.osinovi.userservice.service.impl;
 import by.osinovi.userservice.dto.user.UserRequestDto;
 import by.osinovi.userservice.dto.user.UserResponseDto;
 import by.osinovi.userservice.entity.User;
+import by.osinovi.userservice.exception.InvalidInputException;
 import by.osinovi.userservice.exception.UserNotFoundException;
 import by.osinovi.userservice.mapper.UserMapper;
 import by.osinovi.userservice.repository.UserRepository;
@@ -25,6 +26,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserResponseDto createUser(UserRequestDto userRequestDto) {
+        if (userRepository.findUserByEmail(userRequestDto.getEmail()).isPresent()) {
+            throw new InvalidInputException("Email " + userRequestDto.getEmail() + " already exists");
+        }
+
         User user = userMapper.toEntity(userRequestDto);
         userRepository.save(user);
         UserResponseDto response = userMapper.toDto(user);
@@ -73,6 +78,12 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto updateUser(String id, UserRequestDto userRequestDto) {
         User existingUser = userRepository.findById(Long.valueOf(id))
                 .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+
+        String newEmail = userRequestDto.getEmail();
+        if (!newEmail.equals(existingUser.getEmail()) && userRepository.findUserByEmail(newEmail).isPresent()) {
+            throw new InvalidInputException("Email " + newEmail + " already exists");
+        }
+
         String oldEmail = existingUser.getEmail();
         User updatedUser = userMapper.toEntity(userRequestDto);
         existingUser.setName(updatedUser.getName());
