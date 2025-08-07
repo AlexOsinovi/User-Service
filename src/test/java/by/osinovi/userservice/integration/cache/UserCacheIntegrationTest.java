@@ -18,8 +18,12 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureWebMvc
 class UserCacheIntegrationTest extends BaseIntegrationTest {
@@ -43,10 +47,8 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         userCacheManager.clearAll();
     }
 
-
     @Test
     void createUser_ShouldCacheResult() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Cache");
         userRequest.setSurname("Test");
@@ -67,7 +69,6 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void getUserById_ShouldCacheResult() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("GetCache");
         userRequest.setSurname("Test");
@@ -84,19 +85,16 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
 
         userCacheManager.clearAll();
 
-        // When - First request (should hit database)
         mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdUser.getId()));
 
-        // Then - User should be cached
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
     }
 
     @Test
     void getUserByEmail_ShouldCacheResult() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Email");
         userRequest.setSurname("Cache");
@@ -124,7 +122,6 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void updateUser_ShouldUpdateCache() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Evict");
         userRequest.setSurname("Test");
@@ -139,16 +136,13 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
 
         UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
 
-        // When - First request to populate cache
         mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Evict"));
 
-        // Ensure user is cached
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
 
-        // When - Update user (should evict cache)
         UserRequestDto updateRequest = new UserRequestDto();
         updateRequest.setName("Evict Updated");
         updateRequest.setSurname("Test Updated");
@@ -160,17 +154,16 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Evict Updated"))
-                .andReturn().getResponse().getContentAsString();;
+                .andReturn().getResponse().getContentAsString();
+        ;
 
         UserResponseDto updatedUser = objectMapper.readValue(updatedResponse, UserResponseDto.class);
-        // Then - User should be evicted from cache (old id/email)
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
         assertThat(userCacheManager.getUserByEmail(updatedUser.getEmail())).isNotNull();
     }
 
     @Test
     void deleteUser_ShouldEvictCache() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Delete");
         userRequest.setSurname("Test");
@@ -185,23 +178,18 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
 
         UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
 
-        // When - First request to populate cache
         mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Delete"));
 
-        // Ensure user is cached
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
 
-        // When - Delete user (should evict cache)
         mockMvc.perform(delete("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isNoContent());
 
-        // Then - User should be evicted from cache
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
     }
-
 
 } 

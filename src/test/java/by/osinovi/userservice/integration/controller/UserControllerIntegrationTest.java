@@ -16,8 +16,12 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureWebMvc
 class UserControllerIntegrationTest extends BaseIntegrationTest {
@@ -37,14 +41,12 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void createUser_ShouldReturnCreatedUser() throws Exception {
-        // Given
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("John");
         userRequest.setSurname("Doe");
         userRequest.setEmail("john.doe@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        // When & Then
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequest)))
@@ -58,13 +60,11 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void createUser_WithInvalidData_ShouldReturnBadRequest() throws Exception {
-        // Given
         UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName(""); // Invalid: empty name
+        userRequest.setName("");
         userRequest.setSurname("Doe");
-        userRequest.setEmail("invalid-email"); // Invalid email format
+        userRequest.setEmail("invalid-email");
 
-        // When & Then
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequest)))
@@ -73,7 +73,6 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void getUserById_ShouldReturnUser() throws Exception {
-        // Given - Create a user first
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Jane");
         userRequest.setSurname("Smith");
@@ -88,7 +87,6 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
         UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
 
-        // When & Then - Get user by ID
         mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdUser.getId()))
@@ -99,14 +97,12 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void getUserById_WithNonExistentId_ShouldReturnNotFound() throws Exception {
-        // When & Then
         mockMvc.perform(get("/api/users/{id}", "999"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void getUsersByIds_ShouldReturnUsers() throws Exception {
-        // Given - Create multiple users
         UserRequestDto user1 = new UserRequestDto();
         user1.setName("Alice");
         user1.setSurname("Johnson");
@@ -134,7 +130,6 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         UserResponseDto createdUser1 = objectMapper.readValue(response1, UserResponseDto.class);
         UserResponseDto createdUser2 = objectMapper.readValue(response2, UserResponseDto.class);
 
-        // When & Then - Get users by IDs
         mockMvc.perform(get("/api/users")
                         .param("ids", createdUser1.getId().toString(), createdUser2.getId().toString()))
                 .andExpect(status().isOk())
@@ -145,7 +140,6 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void getUserByEmail_ShouldReturnUser() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Charlie");
         userRequest.setSurname("Wilson");
@@ -157,7 +151,6 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                         .content(objectMapper.writeValueAsString(userRequest)))
                 .andExpect(status().isCreated());
 
-        // When & Then - Get user by email
         mockMvc.perform(get("/api/users/email/{email}", "charlie.wilson@example.com"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Charlie"))
@@ -167,14 +160,12 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void getUserByEmail_WithNonExistentEmail_ShouldReturnNotFound() throws Exception {
-        // When & Then
         mockMvc.perform(get("/api/users/email/{email}", "nonexistent@example.com"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void updateUser_ShouldReturnUpdatedUser() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("David");
         userRequest.setSurname("Miller");
@@ -189,14 +180,12 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
         UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
 
-        // Given - Update data
         UserRequestDto updateRequest = new UserRequestDto();
         updateRequest.setName("David Updated");
         updateRequest.setSurname("Miller Updated");
         updateRequest.setEmail("david.updated@example.com");
         updateRequest.setBirthDate(LocalDate.of(1991, 4, 12));
 
-        // When & Then - Update user
         mockMvc.perform(put("/api/users/{id}", createdUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
@@ -209,13 +198,11 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void updateUser_WithNonExistentId_ShouldReturnNotFound() throws Exception {
-        // Given
         UserRequestDto updateRequest = new UserRequestDto();
         updateRequest.setName("Test");
         updateRequest.setSurname("User");
         updateRequest.setEmail("test@example.com");
 
-        // When & Then
         mockMvc.perform(put("/api/users/{id}", "999")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
@@ -224,7 +211,6 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void deleteUser_ShouldReturnNoContent() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Eve");
         userRequest.setSurname("Davis");
@@ -239,19 +225,17 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
 
         UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
 
-        // When & Then - Delete user
         mockMvc.perform(delete("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isNoContent());
 
-        // Verify user is deleted
         mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void deleteUser_WithNonExistentId_ShouldReturnNotFound() throws Exception {
-        // When & Then
         mockMvc.perform(delete("/api/users/{id}", "999"))
                 .andExpect(status().isNotFound());
     }
+
 } 

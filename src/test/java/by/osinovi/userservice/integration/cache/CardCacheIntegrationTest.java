@@ -21,8 +21,12 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureWebMvc
 class CardCacheIntegrationTest extends BaseIntegrationTest {
@@ -51,7 +55,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void cacheCard_ShouldCacheResultAndEvictUser() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Cache");
         userRequest.setSurname("Card");
@@ -66,8 +69,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
 
         UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
 
-
-        // Given - Create a card
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("1234567890123456");
         cardRequest.setHolder("CACHE CARD");
@@ -85,14 +86,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
         assertThat(userCacheManager.getUserById(String.valueOf(createdUser.getId()))).isNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
 
-//
-//        // When - First request (should hit database and cache)
-//        mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
-//                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.id").value(createdCard.getId()));
-//
-//        // Then - Card should be cached
-//        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
     }
 
     @Test
@@ -137,7 +130,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void updateCard_ShouldEvictCache() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Evict");
         userRequest.setSurname("Card");
@@ -152,7 +144,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
 
         UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
 
-        // Given - Create a card
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("1111222233334444");
         cardRequest.setHolder("EVICT CARD");
@@ -166,15 +157,12 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
 
         CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
 
-        // When - First request to populate cache
         mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value("1111222233334444"));
 
-        // Ensure card is cached
         assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
 
-        // When - Update card (should evict cache)
         CardRequestDto updateRequest = new CardRequestDto();
         updateRequest.setNumber("5555666677778888");
         updateRequest.setHolder("EVICT CARD");
@@ -190,7 +178,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.expirationDate").value("2028-01-01"))
                 .andExpect(jsonPath("$.userId").value(createdUser.getId()));
 
-        // Then - Card should be evicted from cache (old id)
         assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
@@ -198,7 +185,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void deleteCard_ShouldEvictCache() throws Exception {
-        // Given - Create a user
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Delete");
         userRequest.setSurname("Card");
@@ -213,7 +199,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
 
         UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
 
-        // Given - Create a card
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("9999888877776666");
         cardRequest.setHolder("DELETE CARD");
@@ -227,7 +212,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
 
         CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
 
-        // When - First request to populate cache
         mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value("9999888877776666"));
@@ -236,18 +220,16 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdUser.getId()));
 
-        // Ensure card is cached
         assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
 
-        // When - Delete card (should evict cache)
         mockMvc.perform(delete("/api/cards/{id}", createdCard.getId()))
                 .andExpect(status().isNoContent());
 
-        // Then - Card should be evicted from cache
         assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNull();
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
     }
+
 } 

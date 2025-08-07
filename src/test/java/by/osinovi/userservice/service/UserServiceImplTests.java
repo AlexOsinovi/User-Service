@@ -244,4 +244,5 @@ class UserServiceImplTests {
         assertThrows(UserNotFoundException.class, () -> userService.deleteUser("1"));
         verify(userRepository, never()).delete(any());
     }
+
 }

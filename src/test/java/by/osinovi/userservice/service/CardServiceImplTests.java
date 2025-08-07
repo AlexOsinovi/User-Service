@@ -256,4 +256,5 @@ class CardServiceImplTests {
         assertThrows(CardNotFoundException.class, () -> cardService.deleteCard("1"));
         verify(cardRepository, never()).delete(any());
     }
+
 }
