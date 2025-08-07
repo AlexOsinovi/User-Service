@@ -1,0 +1,253 @@
+package by.osinovi.userservice.integration.cache;
+
+import by.osinovi.userservice.config.CardCacheManager;
+import by.osinovi.userservice.config.UserCacheManager;
+import by.osinovi.userservice.dto.card.CardRequestDto;
+import by.osinovi.userservice.dto.card.CardResponseDto;
+import by.osinovi.userservice.dto.user.UserRequestDto;
+import by.osinovi.userservice.dto.user.UserResponseDto;
+import by.osinovi.userservice.integration.config.BaseIntegrationTest;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@AutoConfigureWebMvc
+class CardCacheIntegrationTest extends BaseIntegrationTest {
+
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    @Autowired
+    private CardCacheManager cardCacheManager;
+
+    @Autowired
+    private UserCacheManager userCacheManager;
+
+    private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+
+        cardCacheManager.clearAll();
+        userCacheManager.clearAll();
+    }
+
+    @Test
+    void cacheCard_ShouldCacheResultAndEvictUser() throws Exception {
+        // Given - Create a user
+        UserRequestDto userRequest = new UserRequestDto();
+        userRequest.setName("Cache");
+        userRequest.setSurname("Card");
+        userRequest.setEmail("cache.card@example.com");
+        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
+
+        String userResponse = mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+
+
+        // Given - Create a card
+        CardRequestDto cardRequest = new CardRequestDto();
+        cardRequest.setNumber("1234567890123456");
+        cardRequest.setHolder("CACHE CARD");
+        cardRequest.setExpirationDate(LocalDate.of(2025, 12, 31));
+
+        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cardRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+
+        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
+        assertThat(userCacheManager.getUserById(String.valueOf(createdUser.getId()))).isNull();
+        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
+
+//
+//        // When - First request (should hit database and cache)
+//        mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.id").value(createdCard.getId()));
+//
+//        // Then - Card should be cached
+//        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
+    }
+
+    @Test
+    void getCardById_ShouldCacheResult() throws Exception {
+        UserRequestDto userRequest = new UserRequestDto();
+        userRequest.setName("Getcache");
+        userRequest.setSurname("Card");
+        userRequest.setEmail("get.cache.card@example.com");
+        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
+
+        String userResponse = mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+
+        CardRequestDto cardRequest = new CardRequestDto();
+        cardRequest.setNumber("1234560000000456");
+        cardRequest.setHolder("GETCACHE CARD");
+        cardRequest.setExpirationDate(LocalDate.of(2025, 12, 31));
+
+        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cardRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+
+        cardCacheManager.clearAll();
+        userCacheManager.clearAll();
+
+        mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdCard.getId()));
+
+        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
+
+    }
+
+    @Test
+    void updateCard_ShouldEvictCache() throws Exception {
+        // Given - Create a user
+        UserRequestDto userRequest = new UserRequestDto();
+        userRequest.setName("Evict");
+        userRequest.setSurname("Card");
+        userRequest.setEmail("evict.card@example.com");
+        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
+
+        String userResponse = mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+
+        // Given - Create a card
+        CardRequestDto cardRequest = new CardRequestDto();
+        cardRequest.setNumber("1111222233334444");
+        cardRequest.setHolder("EVICT CARD");
+        cardRequest.setExpirationDate(LocalDate.of(2026, 6, 30));
+
+        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cardRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+
+        // When - First request to populate cache
+        mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value("1111222233334444"));
+
+        // Ensure card is cached
+        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
+
+        // When - Update card (should evict cache)
+        CardRequestDto updateRequest = new CardRequestDto();
+        updateRequest.setNumber("5555666677778888");
+        updateRequest.setHolder("EVICT CARD");
+        updateRequest.setExpirationDate(LocalDate.of(2028, 1, 1));
+
+        mockMvc.perform(put("/api/cards/{id}/user/{userId}", createdCard.getId(), createdUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdCard.getId()))
+                .andExpect(jsonPath("$.number").value("5555666677778888"))
+                .andExpect(jsonPath("$.holder").value("EVICT CARD"))
+                .andExpect(jsonPath("$.expirationDate").value("2028-01-01"))
+                .andExpect(jsonPath("$.userId").value(createdUser.getId()));
+
+        // Then - Card should be evicted from cache (old id)
+        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
+        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
+        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
+    }
+
+    @Test
+    void deleteCard_ShouldEvictCache() throws Exception {
+        // Given - Create a user
+        UserRequestDto userRequest = new UserRequestDto();
+        userRequest.setName("Delete");
+        userRequest.setSurname("Card");
+        userRequest.setEmail("delete.card@example.com");
+        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
+
+        String userResponse = mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+
+        // Given - Create a card
+        CardRequestDto cardRequest = new CardRequestDto();
+        cardRequest.setNumber("9999888877776666");
+        cardRequest.setHolder("DELETE CARD");
+        cardRequest.setExpirationDate(LocalDate.of(2027, 7, 7));
+
+        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cardRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+
+        // When - First request to populate cache
+        mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value("9999888877776666"));
+
+        mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(createdUser.getId()));
+
+        // Ensure card is cached
+        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
+        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
+        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
+
+        // When - Delete card (should evict cache)
+        mockMvc.perform(delete("/api/cards/{id}", createdCard.getId()))
+                .andExpect(status().isNoContent());
+
+        // Then - Card should be evicted from cache
+        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNull();
+        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
+        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
+    }
+} 

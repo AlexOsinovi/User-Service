@@ -95,6 +95,7 @@ public class UserServiceImpl implements UserService {
         userCacheManager.cacheUser(id, existingUser.getEmail(), response);
         if (!oldEmail.equals(existingUser.getEmail())) {
             userCacheManager.evictUser(id, oldEmail);
+            userCacheManager.cacheUser(id,null, response);
         }
         return response;
     }

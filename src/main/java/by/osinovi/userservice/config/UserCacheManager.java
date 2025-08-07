@@ -54,4 +54,12 @@ public class UserCacheManager {
         }
     }
 
+    public void clearAll() {
+        var keys = redisTemplate.keys(CACHE_PREFIX + "*");
+        if (!keys.isEmpty()) {
+            redisTemplate.delete(keys);
+            log.debug("Cleared all card cache entries");
+        }
+    }
+
 }

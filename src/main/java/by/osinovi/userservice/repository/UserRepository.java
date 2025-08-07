@@ -17,4 +17,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
 
     @Query(value = "SELECT * FROM users WHERE id in :ids", nativeQuery = true)
     List<User> findUserByIdIn(@Param("ids") List<Long> ids);
+
+    void deleteById(Long id);
 }
