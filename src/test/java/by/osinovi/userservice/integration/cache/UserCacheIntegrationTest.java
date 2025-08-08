@@ -127,18 +127,24 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
 
         UserRequestDto updateRequest = new UserRequestDto();
-        updateRequest.setName("Evict Updated");
-        updateRequest.setSurname("Test Updated");
+        updateRequest.setName("Evict");
+        updateRequest.setSurname("Testaa");
         updateRequest.setEmail("evict.updated@example.com");
-        updateRequest.setBirthDate(LocalDate.of(1990, 1, 1));
+        updateRequest.setBirthDate(LocalDate.of(1992, 1, 1));
 
-        mockMvc.perform(put("/api/users/{id}", createdUser.getId())
+        String updatedResponse = mockMvc.perform(put("/api/users/{id}", createdUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Evict Updated"));
+                .andExpect(jsonPath("$.name").value("Evict"))
+                .andExpect(jsonPath("$.surname").value("Testaa"))
+                .andExpect(jsonPath("$.email").value("evict.updated@example.com"))
+                .andExpect(jsonPath("$.birthDate").value("1992-01-01"))
+                .andReturn().getResponse().getContentAsString();
 
-        UserResponseDto updatedUser = createUser(updateRequest); // Note: This assumes the API allows re-creating with the same ID for testing
+        UserResponseDto updatedUser = objectMapper.readValue(updatedResponse, UserResponseDto.class);
+
+        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
         assertThat(userCacheManager.getUserByEmail(updatedUser.getEmail())).isNotNull();
     }

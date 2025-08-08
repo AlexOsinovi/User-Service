@@ -122,7 +122,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void getCardById_ShouldReturnCard() throws Exception {
         UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName("Alice");
+        userRequest.setName("Alic");
         userRequest.setSurname("Johnson");
         userRequest.setEmail("alice.johnson@example.com");
         userRequest.setBirthDate(LocalDate.of(1992, 3, 10));
@@ -130,8 +130,8 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
-        cardRequest.setNumber("1234567890123456");
-        cardRequest.setHolder("ALICE JOHNSON");
+        cardRequest.setNumber("1234567800123456");
+        cardRequest.setHolder("ALIC JOHNSON");
         cardRequest.setExpirationDate(LocalDate.of(2025, 12, 31));
 
         CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
@@ -139,8 +139,8 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdCard.getId()))
-                .andExpect(jsonPath("$.number").value("1234567890123456"))
-                .andExpect(jsonPath("$.holder").value("ALICE JOHNSON"))
+                .andExpect(jsonPath("$.number").value("1234567800123456"))
+                .andExpect(jsonPath("$.holder").value("ALIC JOHNSON"))
                 .andExpect(jsonPath("$.expirationDate").value("2025-12-31"))
                 .andExpect(jsonPath("$.userId").value(createdUser.getId()));
     }
