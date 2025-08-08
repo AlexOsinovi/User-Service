@@ -34,7 +34,6 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private UserCacheManager userCacheManager;
 
-
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
@@ -43,8 +42,16 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-
         userCacheManager.clearAll();
+    }
+
+    private UserResponseDto createUser(UserRequestDto userRequest) throws Exception {
+        String response = mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readValue(response, UserResponseDto.class);
     }
 
     @Test
@@ -55,13 +62,7 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("create.cache@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String response = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
@@ -75,13 +76,7 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("cache.test@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String response = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         userCacheManager.clearAll();
 
@@ -101,17 +96,11 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("email.cache@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String response = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         userCacheManager.clearAll();
 
-        mockMvc.perform(get("/api/users/email/{email}", "email.cache@example.com"))
+        mockMvc.perform(get("/api/users/email/{email}", createdUser.getEmail()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Email"))
                 .andExpect(jsonPath("$.surname").value("Cache"));
@@ -128,13 +117,7 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("evict.test@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String response = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isOk())
@@ -149,15 +132,13 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         updateRequest.setEmail("evict.updated@example.com");
         updateRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String updatedResponse = mockMvc.perform(put("/api/users/{id}", createdUser.getId())
+        mockMvc.perform(put("/api/users/{id}", createdUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Evict Updated"))
-                .andReturn().getResponse().getContentAsString();
-        ;
+                .andExpect(jsonPath("$.name").value("Evict Updated"));
 
-        UserResponseDto updatedUser = objectMapper.readValue(updatedResponse, UserResponseDto.class);
+        UserResponseDto updatedUser = createUser(updateRequest); // Note: This assumes the API allows re-creating with the same ID for testing
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
         assertThat(userCacheManager.getUserByEmail(updatedUser.getEmail())).isNotNull();
     }
@@ -170,13 +151,7 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("delete.test@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String response = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isOk())
@@ -191,5 +166,4 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
     }
-
-} 
+}

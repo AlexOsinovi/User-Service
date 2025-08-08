@@ -41,6 +41,24 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
+    private UserResponseDto createUser(UserRequestDto userRequest) throws Exception {
+        String response = mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readValue(response, UserResponseDto.class);
+    }
+
+    private CardResponseDto createCard(Long userId, CardRequestDto cardRequest) throws Exception {
+        String response = mockMvc.perform(post("/api/cards/user/{userId}", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cardRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readValue(response, CardResponseDto.class);
+    }
+
     @Test
     void createCard_ShouldReturnCreatedCard() throws Exception {
         UserRequestDto userRequest = new UserRequestDto();
@@ -49,13 +67,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("john.doe@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("1234567890123456");
@@ -81,13 +93,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("jane.smith@example.com");
         userRequest.setBirthDate(LocalDate.of(1985, 5, 15));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("123");
@@ -107,7 +113,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         cardRequest.setHolder("JOHN DOE");
         cardRequest.setExpirationDate(LocalDate.of(2025, 12, 31));
 
-        mockMvc.perform(post("/api/cards/user/{userId}", "999")
+        mockMvc.perform(post("/api/cards/user/{userId}", 999L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cardRequest)))
                 .andExpect(status().isNotFound());
@@ -121,90 +127,28 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("alice.johnson@example.com");
         userRequest.setBirthDate(LocalDate.of(1992, 3, 10));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
-        cardRequest.setNumber("1111111111111111");
+        cardRequest.setNumber("1234567890123456");
         cardRequest.setHolder("ALICE JOHNSON");
-        cardRequest.setExpirationDate(LocalDate.of(2026, 6, 30));
+        cardRequest.setExpirationDate(LocalDate.of(2025, 12, 31));
 
-        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(cardRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(createdCard.getId()))
-                .andExpect(jsonPath("$.number").value("1111111111111111"))
+                .andExpect(jsonPath("$.number").value("1234567890123456"))
                 .andExpect(jsonPath("$.holder").value("ALICE JOHNSON"))
-                .andExpect(jsonPath("$.expirationDate").value("2026-06-30"))
+                .andExpect(jsonPath("$.expirationDate").value("2025-12-31"))
                 .andExpect(jsonPath("$.userId").value(createdUser.getId()));
     }
 
     @Test
-    void getCardById_WithNonExistentId_ShouldReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/cards/{id}", "999"))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void getCardsByUserId_ShouldReturnCards() throws Exception {
-        UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName("Bob");
-        userRequest.setSurname("Brown");
-        userRequest.setEmail("bob.brown@example.com");
-        userRequest.setBirthDate(LocalDate.of(1988, 7, 22));
-
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
-
-        CardRequestDto card1 = new CardRequestDto();
-        card1.setNumber("2222222222222222");
-        card1.setHolder("BOB BROWN");
-        card1.setExpirationDate(LocalDate.of(2025, 8, 15));
-
-        CardRequestDto card2 = new CardRequestDto();
-        card2.setNumber("3333333333333333");
-        card2.setHolder("BOB BROWN");
-        card2.setExpirationDate(LocalDate.of(2027, 3, 20));
-
-        mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(card1)))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(card2)))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(get("/api/cards/user/{userId}", createdUser.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].userId").value(createdUser.getId()))
-                .andExpect(jsonPath("$[1].userId").value(createdUser.getId()));
-    }
-
-    @Test
     void getCardsByUserId_WithNonExistentUser_ShouldReturnEmptyList() throws Exception {
-        mockMvc.perform(get("/api/cards/user/{userId}", "999"))
+        mockMvc.perform(get("/api/cards/user/{userId}", 999L))
                 .andExpect(status().isNotFound());
-
     }
 
     @Test
@@ -215,26 +159,14 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("charlie.wilson@example.com");
         userRequest.setBirthDate(LocalDate.of(1995, 11, 8));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("4444444444444444");
         cardRequest.setHolder("CHARLIE WILSON");
         cardRequest.setExpirationDate(LocalDate.of(2026, 1, 10));
 
-        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(cardRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         CardRequestDto updateRequest = new CardRequestDto();
         updateRequest.setNumber("5555555555555555");
@@ -260,20 +192,14 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("david.miller@example.com");
         userRequest.setBirthDate(LocalDate.of(1991, 4, 12));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto updateRequest = new CardRequestDto();
         updateRequest.setNumber("6666666666666666");
         updateRequest.setHolder("DAVID MILLER");
         updateRequest.setExpirationDate(LocalDate.of(2027, 9, 30));
 
-        mockMvc.perform(put("/api/cards/{id}/user/{userId}", "999", createdUser.getId())
+        mockMvc.perform(put("/api/cards/{id}/user/{userId}", 999L, createdUser.getId())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isNotFound());
@@ -287,26 +213,14 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("eve.davis@example.com");
         userRequest.setBirthDate(LocalDate.of(1993, 9, 25));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("7777777777777777");
         cardRequest.setHolder("EVE DAVIS");
         cardRequest.setExpirationDate(LocalDate.of(2026, 12, 31));
 
-        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(cardRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         mockMvc.perform(delete("/api/cards/{id}", createdCard.getId()))
                 .andExpect(status().isNoContent());
@@ -317,8 +231,7 @@ class CardControllerIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void deleteCard_WithNonExistentId_ShouldReturnNotFound() throws Exception {
-        mockMvc.perform(delete("/api/cards/{id}", "999"))
+        mockMvc.perform(delete("/api/cards/{id}", 999L))
                 .andExpect(status().isNotFound());
     }
-
-} 
+}

@@ -39,6 +39,15 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         objectMapper.registerModule(new JavaTimeModule());
     }
 
+    private UserResponseDto createUser(UserRequestDto userRequest) throws Exception {
+        String response = mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readValue(response, UserResponseDto.class);
+    }
+
     @Test
     void createUser_ShouldReturnCreatedUser() throws Exception {
         UserRequestDto userRequest = new UserRequestDto();
@@ -79,13 +88,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("jane.smith@example.com");
         userRequest.setBirthDate(LocalDate.of(1985, 5, 15));
 
-        String response = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isOk())
@@ -115,20 +118,8 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         user2.setEmail("bob.brown@example.com");
         user2.setBirthDate(LocalDate.of(1988, 7, 22));
 
-        String response1 = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user1)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        String response2 = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(user2)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser1 = objectMapper.readValue(response1, UserResponseDto.class);
-        UserResponseDto createdUser2 = objectMapper.readValue(response2, UserResponseDto.class);
+        UserResponseDto createdUser1 = createUser(user1);
+        UserResponseDto createdUser2 = createUser(user2);
 
         mockMvc.perform(get("/api/users")
                         .param("ids", createdUser1.getId().toString(), createdUser2.getId().toString()))
@@ -146,10 +137,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("charlie.wilson@example.com");
         userRequest.setBirthDate(LocalDate.of(1995, 11, 8));
 
-        mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated());
+        createUser(userRequest);
 
         mockMvc.perform(get("/api/users/email/{email}", "charlie.wilson@example.com"))
                 .andExpect(status().isOk())
@@ -172,13 +160,7 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("david.miller@example.com");
         userRequest.setBirthDate(LocalDate.of(1991, 4, 12));
 
-        String response = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);;
 
         UserRequestDto updateRequest = new UserRequestDto();
         updateRequest.setName("David Updated");
@@ -217,13 +199,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("eve.davis@example.com");
         userRequest.setBirthDate(LocalDate.of(1993, 9, 25));
 
-        String response = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
 
-        UserResponseDto createdUser = objectMapper.readValue(response, UserResponseDto.class);
+
+        UserResponseDto createdUser = createUser(userRequest);
 
         mockMvc.perform(delete("/api/users/{id}", createdUser.getId()))
                 .andExpect(status().isNoContent());
@@ -238,4 +216,4 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
-} 
+}

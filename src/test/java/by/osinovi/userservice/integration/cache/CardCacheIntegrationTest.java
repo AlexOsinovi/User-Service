@@ -48,9 +48,26 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-
         cardCacheManager.clearAll();
         userCacheManager.clearAll();
+    }
+
+    private UserResponseDto createUser(UserRequestDto userRequest) throws Exception {
+        String response = mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readValue(response, UserResponseDto.class);
+    }
+
+    private CardResponseDto createCard(Long userId, CardRequestDto cardRequest) throws Exception {
+        String response = mockMvc.perform(post("/api/cards/user/{userId}", userId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cardRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return objectMapper.readValue(response, CardResponseDto.class);
     }
 
     @Test
@@ -61,31 +78,18 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("cache.card@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("1234567890123456");
         cardRequest.setHolder("CACHE CARD");
         cardRequest.setExpirationDate(LocalDate.of(2025, 12, 31));
 
-        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(cardRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
         assertThat(userCacheManager.getUserById(String.valueOf(createdUser.getId()))).isNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
-
     }
 
     @Test
@@ -96,26 +100,14 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("get.cache.card@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("1234560000000456");
         cardRequest.setHolder("GETCACHE CARD");
         cardRequest.setExpirationDate(LocalDate.of(2025, 12, 31));
 
-        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(cardRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         cardCacheManager.clearAll();
         userCacheManager.clearAll();
@@ -125,7 +117,6 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
                 .andExpect(jsonPath("$.id").value(createdCard.getId()));
 
         assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
-
     }
 
     @Test
@@ -136,26 +127,14 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("evict.card@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("1111222233334444");
         cardRequest.setHolder("EVICT CARD");
         cardRequest.setExpirationDate(LocalDate.of(2026, 6, 30));
 
-        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(cardRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
                 .andExpect(status().isOk())
@@ -191,26 +170,14 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
         userRequest.setEmail("delete.card@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
-        String userResponse = mockMvc.perform(post("/api/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        UserResponseDto createdUser = objectMapper.readValue(userResponse, UserResponseDto.class);
+        UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("9999888877776666");
         cardRequest.setHolder("DELETE CARD");
         cardRequest.setExpirationDate(LocalDate.of(2027, 7, 7));
 
-        String cardResponse = mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(cardRequest)))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-
-        CardResponseDto createdCard = objectMapper.readValue(cardResponse, CardResponseDto.class);
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         mockMvc.perform(get("/api/cards/{id}", createdCard.getId()))
                 .andExpect(status().isOk())
@@ -231,5 +198,4 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
     }
-
-} 
+}

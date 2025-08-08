@@ -1,5 +1,6 @@
 package by.osinovi.userservice.integration.config;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -19,11 +20,23 @@ public abstract class BaseIntegrationTest {
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("user_service_test")
             .withUsername("test_user")
-            .withPassword("test_password");
+            .withPassword("test_password")
+            .withReuse(true);
 
     @Container
     static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7.4.2"))
-            .withExposedPorts(6379);
+            .withExposedPorts(6379)
+            .withReuse(true);
+
+    @BeforeAll
+    static void startContainers() {
+        if (!postgres.isRunning()) {
+            postgres.start();
+        }
+        if (!redis.isRunning()) {
+            redis.start();
+        }
+    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -34,12 +47,5 @@ public abstract class BaseIntegrationTest {
 
         registry.add("spring.data.redis.host", redis::getHost);
         registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
-
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
-        registry.add("spring.jpa.show-sql", () -> "true");
-        registry.add("spring.jpa.properties.hibernate.format_sql", () -> "true");
-        registry.add("spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
-        registry.add("spring.liquibase.enabled", () -> "false");
     }
-
-} 
+}
