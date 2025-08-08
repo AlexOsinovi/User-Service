@@ -3,6 +3,8 @@ package by.osinovi.userservice.integration.controller;
 import by.osinovi.userservice.dto.user.UserRequestDto;
 import by.osinovi.userservice.dto.user.UserResponseDto;
 import by.osinovi.userservice.integration.config.BaseIntegrationTest;
+import by.osinovi.userservice.repository.CardRepository;
+import by.osinovi.userservice.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +31,9 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private WebApplicationContext webApplicationContext;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
@@ -37,6 +42,8 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+
+        userRepository.deleteAll();
     }
 
     private UserResponseDto createUser(UserRequestDto userRequest) throws Exception {
