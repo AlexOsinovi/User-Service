@@ -64,14 +64,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
-          mvn sonar:sonar \
-            -Dsonar.projectKey=AlexOsinovi_User-Service 
-            -Dsonar.organization=alexosinovi 
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
-            -Dsonar.qualityGate.wait=true \
-            -Dsonar.projectVersion=${{ github.event.repository.default_branch == github.ref_name && github.event_name == 'push' && 'pom.xml' || github.sha }}
+          run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=AlexOsinovi_User-Service
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
