@@ -7,9 +7,11 @@ import by.osinovi.userservice.exception.InvalidInputException;
 import by.osinovi.userservice.exception.UserNotFoundException;
 import by.osinovi.userservice.mapper.UserMapper;
 import by.osinovi.userservice.repository.UserRepository;
-import by.osinovi.userservice.config.UserCacheManager;
+import by.osinovi.userservice.config.cache.UserCacheManager;
 import by.osinovi.userservice.service.UserService;
+import by.osinovi.userservice.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final UserCacheManager userCacheManager;
+    private final JwtUtil jwtUtil;
 
     @Override
     @Transactional
@@ -31,6 +34,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userMapper.toEntity(userRequestDto);
+        user.setEmail(jwtUtil.getCurrentUserEmail());
         userRepository.save(user);
         UserResponseDto response = userMapper.toDto(user);
         userCacheManager.cacheUser(String.valueOf(user.getId()), user.getEmail(), response);

@@ -1,7 +1,7 @@
 package by.osinovi.userservice.integration.cache;
 
-import by.osinovi.userservice.config.CardCacheManager;
-import by.osinovi.userservice.config.UserCacheManager;
+import by.osinovi.userservice.config.cache.CardCacheManager;
+import by.osinovi.userservice.config.cache.UserCacheManager;
 import by.osinovi.userservice.dto.card.CardRequestDto;
 import by.osinovi.userservice.dto.card.CardResponseDto;
 import by.osinovi.userservice.dto.user.UserRequestDto;

@@ -6,7 +6,7 @@ import by.osinovi.userservice.entity.User;
 import by.osinovi.userservice.exception.UserNotFoundException;
 import by.osinovi.userservice.mapper.UserMapper;
 import by.osinovi.userservice.repository.UserRepository;
-import by.osinovi.userservice.config.UserCacheManager;
+import by.osinovi.userservice.config.cache.UserCacheManager;
 import by.osinovi.userservice.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package by.osinovi.userservice.config;
+package by.osinovi.userservice.config.cache;
 
 import by.osinovi.userservice.dto.user.UserResponseDto;
 import lombok.RequiredArgsConstructor;
