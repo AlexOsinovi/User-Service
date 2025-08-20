@@ -24,7 +24,6 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final UserCacheManager userCacheManager;
-    private final JwtUtil jwtUtil;
 
     @Override
     @Transactional
@@ -34,7 +33,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User user = userMapper.toEntity(userRequestDto);
-        user.setEmail(jwtUtil.getCurrentUserEmail());
+        user.setEmail(userRequestDto.getEmail());
         userRepository.save(user);
         UserResponseDto response = userMapper.toDto(user);
         userCacheManager.cacheUser(String.valueOf(user.getId()), user.getEmail(), response);

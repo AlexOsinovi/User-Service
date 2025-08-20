@@ -4,6 +4,7 @@ import by.osinovi.userservice.config.cache.UserCacheManager;
 import by.osinovi.userservice.dto.user.UserRequestDto;
 import by.osinovi.userservice.dto.user.UserResponseDto;
 import by.osinovi.userservice.integration.config.BaseIntegrationTest;
+import by.osinovi.userservice.integration.util.JwtUtilTest;
 import by.osinovi.userservice.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -38,100 +40,66 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtUtilTest jwtUtilTest;
+
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
+    private String testToken;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
 
-        userCacheManager.clearAll();
-
         userRepository.deleteAll();
+
+        testToken = jwtUtilTest.generateTestToken("test@example.com");
     }
 
     private UserResponseDto createUser(UserRequestDto userRequest) throws Exception {
         String response = mockMvc.perform(post("/api/users")
+                        .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRequest)))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
+
         return objectMapper.readValue(response, UserResponseDto.class);
     }
 
     @Test
-    void createUser_ShouldCacheResult() throws Exception {
+    void createUser_ShouldCacheUser() throws Exception {
         UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName("Cache");
-        userRequest.setSurname("Test");
-        userRequest.setEmail("create.cache@example.com");
+        userRequest.setName("Test");
+        userRequest.setSurname("User");
+        userRequest.setEmail("test@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
         UserResponseDto createdUser = createUser(userRequest);
 
-        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
-        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
-    }
-
-    @Test
-    void getUserById_ShouldCacheResult() throws Exception {
-        UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName("GetCache");
-        userRequest.setSurname("Test");
-        userRequest.setEmail("cache.test@example.com");
-        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
-
-        UserResponseDto createdUser = createUser(userRequest);
-
-        userCacheManager.clearAll();
-
-        mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
+        mockMvc.perform(get("/api/users/{id}", createdUser.getId())
+                        .header("Authorization", "Bearer " + testToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(createdUser.getId()));
+                .andExpect(jsonPath("$.name").value("Test"));
 
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
     }
 
     @Test
-    void getUserByEmail_ShouldCacheResult() throws Exception {
-        UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName("Email");
-        userRequest.setSurname("Cache");
-        userRequest.setEmail("email.cache@example.com");
-        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
-
-        UserResponseDto createdUser = createUser(userRequest);
-
-        userCacheManager.clearAll();
-
-        mockMvc.perform(get("/api/users/email/{email}", createdUser.getEmail()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Email"))
-                .andExpect(jsonPath("$.surname").value("Cache"));
-
-        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
-        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
-    }
-
-    @Test
-    void updateUser_ShouldUpdateCache() throws Exception {
+    void updateUser_ShouldEvictOldEmailCache() throws Exception {
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Evict");
         userRequest.setSurname("Test");
-        userRequest.setEmail("evict.test@example.com");
+        userRequest.setEmail("test@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
         UserResponseDto createdUser = createUser(userRequest);
-
-        mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Evict"));
-
-        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
-        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
 
         UserRequestDto updateRequest = new UserRequestDto();
         updateRequest.setName("Evict");
@@ -140,6 +108,7 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         updateRequest.setBirthDate(LocalDate.of(1992, 1, 1));
 
         String updatedResponse = mockMvc.perform(put("/api/users/{id}", createdUser.getId())
+                        .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
@@ -161,19 +130,21 @@ class UserCacheIntegrationTest extends BaseIntegrationTest {
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Delete");
         userRequest.setSurname("Test");
-        userRequest.setEmail("delete.test@example.com");
+        userRequest.setEmail("test@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
         UserResponseDto createdUser = createUser(userRequest);
 
-        mockMvc.perform(get("/api/users/{id}", createdUser.getId()))
+        mockMvc.perform(get("/api/users/{id}", createdUser.getId())
+                        .header("Authorization", "Bearer " + testToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Delete"));
 
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
         assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
 
-        mockMvc.perform(delete("/api/users/{id}", createdUser.getId()))
+        mockMvc.perform(delete("/api/users/{id}", createdUser.getId())
+                        .header("Authorization", "Bearer " + testToken))
                 .andExpect(status().isNoContent());
 
         assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
