@@ -4,7 +4,7 @@ import by.osinovi.userservice.dto.card.CardRequestDto;
 import by.osinovi.userservice.dto.card.CardResponseDto;
 import by.osinovi.userservice.dto.user.UserRequestDto;
 import by.osinovi.userservice.dto.user.UserResponseDto;
-import by.osinovi.userservice.integration.config.BaseIntegrationTests;
+import by.osinovi.userservice.integration.config.BaseIntegrationTest;
 import by.osinovi.userservice.repository.CardRepository;
 import by.osinovi.userservice.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureWebMvc
-class CardControllerIntegrationTests extends BaseIntegrationTests {
+class CardControllerIntegrationTests extends BaseIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
