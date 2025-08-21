@@ -3,8 +3,7 @@ package by.osinovi.userservice.integration.cache;
 import by.osinovi.userservice.config.UserCacheManager;
 import by.osinovi.userservice.dto.user.UserRequestDto;
 import by.osinovi.userservice.dto.user.UserResponseDto;
-import by.osinovi.userservice.integration.config.BaseIntegrationTest;
-import by.osinovi.userservice.repository.CardRepository;
+import by.osinovi.userservice.integration.config.BaseIntegrationTests;
 import by.osinovi.userservice.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -28,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureWebMvc
-class UserCacheIntegrationTest extends BaseIntegrationTest {
+class UserCacheIntegrationTests extends BaseIntegrationTests {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
