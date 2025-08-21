@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureWebMvc
-class UserControllerIntegrationTest extends BaseIntegrationTest {
+class UserControllerIntegrationTests extends BaseIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;

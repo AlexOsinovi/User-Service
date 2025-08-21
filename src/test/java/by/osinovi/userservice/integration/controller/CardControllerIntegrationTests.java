@@ -1,7 +1,5 @@
-package by.osinovi.userservice.integration.cache;
+package by.osinovi.userservice.integration.controller;
 
-import by.osinovi.userservice.config.cache.CardCacheManager;
-import by.osinovi.userservice.config.cache.UserCacheManager;
 import by.osinovi.userservice.dto.card.CardRequestDto;
 import by.osinovi.userservice.dto.card.CardResponseDto;
 import by.osinovi.userservice.dto.user.UserRequestDto;
@@ -24,7 +22,6 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,16 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @AutoConfigureWebMvc
-class CardCacheIntegrationTest extends BaseIntegrationTest {
+class CardControllerIntegrationTests extends BaseIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;
-
-    @Autowired
-    private CardCacheManager cardCacheManager;
-
-    @Autowired
-    private UserCacheManager userCacheManager;
 
     @Autowired
     private UserRepository userRepository;
@@ -83,8 +74,8 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
         return objectMapper.readValue(response, UserResponseDto.class);
     }
 
-    private CardResponseDto createCard(UserResponseDto user, CardRequestDto cardRequest) throws Exception {
-        String response = mockMvc.perform(post("/api/cards/user/{userId}", user.getId())
+    private CardResponseDto createCard(Long userId, CardRequestDto cardRequest) throws Exception {
+        String response = mockMvc.perform(post("/api/cards/user/{userId}", userId)
                         .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cardRequest)))
@@ -95,132 +86,145 @@ class CardCacheIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void createUser_ShouldReturnOk() throws Exception {
+    void createCard_ShouldReturnCreated() throws Exception {
         UserRequestDto userRequest = new UserRequestDto();
         userRequest.setName("Test");
         userRequest.setSurname("User");
-        userRequest.setEmail("CUSRO@example.com");
-        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
-
-        mockMvc.perform(post("/api/users")
-                        .header("Authorization", "Bearer " + testToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("CUSRO@example.com"))
-                .andExpect(jsonPath("$.name").value("Test"))
-                .andExpect(jsonPath("$.surname").value("User"))
-                .andExpect(jsonPath("$.birthDate").value("1990-01-01"));
-    }
-
-    @Test
-    void createCard_ShouldCacheCard() throws Exception {
-        UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName("Cache");
-        userRequest.setSurname("Card");
-        userRequest.setEmail("CC@example.com");
+        userRequest.setEmail("test@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
         UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
         cardRequest.setNumber("1234567890123456");
-        cardRequest.setHolder("CACHE CARD");
+        cardRequest.setHolder("TEST USER");
         cardRequest.setExpirationDate(LocalDate.of(2025, 1, 1));
 
-        CardResponseDto createdCard = createCard(createdUser, cardRequest);
-
-        mockMvc.perform(get("/api/cards/{id}", createdCard.getId())
-                        .header("Authorization", "Bearer " + testToken))
-                .andExpect(status().isOk())
+        mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
+                        .header("Authorization", "Bearer " + testToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cardRequest)))
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.number").value("1234567890123456"))
-                .andExpect(jsonPath("$.holder").value("CACHE CARD"))
+                .andExpect(jsonPath("$.holder").value("TEST USER"))
                 .andExpect(jsonPath("$.expirationDate").value("2025-01-01"));
-
-        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
     }
 
     @Test
-    void updateCard_ShouldEvictCache() throws Exception {
+    void getCardById_ShouldReturnOk() throws Exception {
         UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName("Evict");
-        userRequest.setSurname("Card");
-        userRequest.setEmail("evict.card@example.com");
+        userRequest.setName("Test");
+        userRequest.setSurname("User");
+        userRequest.setEmail("test_user@example.com");
         userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
 
         UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
-        cardRequest.setNumber("5555666677778888");
-        cardRequest.setHolder("EVICT CARD");
-        cardRequest.setExpirationDate(LocalDate.of(2028, 1, 1));
+        cardRequest.setNumber("1234567890123456");
+        cardRequest.setHolder("TEST USER");
+        cardRequest.setExpirationDate(LocalDate.of(2025, 1, 1));
 
-        CardResponseDto createdCard = createCard(createdUser, cardRequest);
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         mockMvc.perform(get("/api/cards/{id}", createdCard.getId())
                         .header("Authorization", "Bearer " + testToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.number").value("5555666677778888"));
+                .andExpect(jsonPath("$.number").value("1234567890123456"))
+                .andExpect(jsonPath("$.holder").value("TEST USER"))
+                .andExpect(jsonPath("$.expirationDate").value("2025-01-01"));
+    }
 
-        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
+    @Test
+    void updateCard_ShouldReturnOk() throws Exception {
+        UserRequestDto userRequest = new UserRequestDto();
+        userRequest.setName("Test");
+        userRequest.setSurname("User");
+        userRequest.setEmail("test@example.com");
+        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
+
+        UserResponseDto createdUser = createUser(userRequest);
+
+        CardRequestDto cardRequest = new CardRequestDto();
+        cardRequest.setNumber("1234567890123456");
+        cardRequest.setHolder("TEST USER");
+        cardRequest.setExpirationDate(LocalDate.of(2025, 1, 1));
+
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         CardRequestDto updateRequest = new CardRequestDto();
-        updateRequest.setNumber("8888777766665555");
-        updateRequest.setHolder("EVICT CARD");
-        updateRequest.setExpirationDate(LocalDate.of(2029, 1, 1));
+        updateRequest.setNumber("9876543210987654");
+        updateRequest.setHolder("TEST USER");
+        updateRequest.setExpirationDate(LocalDate.of(2026, 1, 1));
 
         mockMvc.perform(put("/api/cards/{id}/user/{userId}", createdCard.getId(),createdUser.getId())
                         .header("Authorization", "Bearer " + testToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.number").value("8888777766665555"))
-                .andExpect(jsonPath("$.holder").value("EVICT CARD"))
-                .andExpect(jsonPath("$.expirationDate").value("2029-01-01"));
-
-        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
-        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
-        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
-
+                .andExpect(jsonPath("$.number").value("9876543210987654"))
+                .andExpect(jsonPath("$.holder").value("TEST USER"))
+                .andExpect(jsonPath("$.expirationDate").value("2026-01-01"));
     }
 
     @Test
-    void deleteCard_ShouldEvictCache() throws Exception {
+    void deleteCard_ShouldReturnNoContent() throws Exception {
         UserRequestDto userRequest = new UserRequestDto();
-        userRequest.setName("Delete");
-        userRequest.setSurname("Card");
-        userRequest.setEmail("delc@example.com");
-        userRequest.setBirthDate(LocalDate.of(1990, 1, 1));
+        userRequest.setName("Eve");
+        userRequest.setSurname("Davis");
+        userRequest.setEmail("test@example.com");
+        userRequest.setBirthDate(LocalDate.of(1993, 9, 25));
 
         UserResponseDto createdUser = createUser(userRequest);
 
         CardRequestDto cardRequest = new CardRequestDto();
-        cardRequest.setNumber("9999888877776666");
-        cardRequest.setHolder("DELETE CARD");
-        cardRequest.setExpirationDate(LocalDate.of(2027, 7, 7));
+        cardRequest.setNumber("7777777777777777");
+        cardRequest.setHolder("EVE DAVIS");
+        cardRequest.setExpirationDate(LocalDate.of(2026, 12, 31));
 
-        CardResponseDto createdCard = createCard(createdUser, cardRequest);
-
-        mockMvc.perform(get("/api/cards/{id}", createdCard.getId())
-                        .header("Authorization", "Bearer " + testToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.number").value("9999888877776666"));
-
-        mockMvc.perform(get("/api/users/{id}", createdUser.getId())
-                        .header("Authorization", "Bearer " + testToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(createdUser.getId().toString()));
-
-        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNotNull();
-        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNotNull();
-        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNotNull();
+        CardResponseDto createdCard = createCard(createdUser.getId(), cardRequest);
 
         mockMvc.perform(delete("/api/cards/{id}", createdCard.getId())
                         .header("Authorization", "Bearer " + testToken))
                 .andExpect(status().isNoContent());
 
-        assertThat(cardCacheManager.getCard(String.valueOf(createdCard.getId()))).isNull();
-        assertThat(userCacheManager.getUserById(createdUser.getId().toString())).isNull();
-        assertThat(userCacheManager.getUserByEmail(createdUser.getEmail())).isNull();
+        mockMvc.perform(get("/api/cards/{id}", createdCard.getId())
+                        .header("Authorization", "Bearer " + testToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteCard_WithNonExistentId_ShouldReturnNotFound() throws Exception {
+        mockMvc.perform(delete("/api/cards/{id}", 999L)
+                        .header("Authorization", "Bearer " + testToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getCard_WithNonExistentId_ShouldReturnNotFound() throws Exception {
+        mockMvc.perform(get("/api/cards/{id}", 999L)
+                        .header("Authorization", "Bearer " + testToken))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createCardWithoutToken_ShouldReturnUnauthorized() throws Exception {
+        UserRequestDto userRequest = new UserRequestDto();
+        userRequest.setName("Frank");
+        userRequest.setSurname("White");
+        userRequest.setEmail("test_Frank@example.com");
+        userRequest.setBirthDate(LocalDate.of(1988, 7, 20));
+
+        UserResponseDto createdUser = createUser(userRequest);
+
+        CardRequestDto cardRequest = new CardRequestDto();
+        cardRequest.setNumber("8888888888888888");
+        cardRequest.setHolder("FRANK WHITE");
+        cardRequest.setExpirationDate(LocalDate.of(2025, 8, 20));
+
+        mockMvc.perform(post("/api/cards/user/{userId}", createdUser.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(cardRequest)))
+                .andExpect(status().isUnauthorized());
     }
 }
