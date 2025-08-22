@@ -73,7 +73,7 @@ public class CardServiceImpl implements CardService {
         if (cards.isEmpty()) {
             throw new CardNotFoundException("No cards found for userId " + userId);
         }
-        return cards.stream().map(cardMapper::toDto).collect(Collectors.toList());
+        return cards.stream().map(cardMapper::toDto).toList();
     }
 
     @Override

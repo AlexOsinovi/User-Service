@@ -166,7 +166,7 @@ class UserControllerIntegrationTests extends BaseIntegrationTest {
         userRequest.setEmail("david.miller@example.com");
         userRequest.setBirthDate(LocalDate.of(1991, 4, 12));
 
-        UserResponseDto createdUser = createUser(userRequest);;
+        UserResponseDto createdUser = createUser(userRequest);
 
         UserRequestDto updateRequest = new UserRequestDto();
         updateRequest.setName("David Updated");

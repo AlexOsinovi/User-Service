@@ -65,12 +65,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponseDto> getUsersByIds(List<String> ids) {
-        List<Long> longIds = ids.stream().map(Long::valueOf).collect(Collectors.toList());
+        List<Long> longIds = ids.stream().map(Long::valueOf).toList();
         List<User> users = userRepository.findUserByIdIn(longIds);
         if (users.isEmpty()) {
             throw new UserNotFoundException("No users found with IDs " + String.join(", ", ids));
         }
-        return users.stream().map(userMapper::toDto).collect(Collectors.toList());
+        return users.stream().map(userMapper::toDto).toList();
     }
 
     @Override
