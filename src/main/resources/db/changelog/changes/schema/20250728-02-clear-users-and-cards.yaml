@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250728-02
+      author: aleksei osinovi
+      comment: Clear all data from users and card_info tables
+      changes:
+        - delete:
+            tableName: users

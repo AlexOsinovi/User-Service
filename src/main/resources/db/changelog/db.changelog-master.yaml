@@ -5,3 +5,12 @@ databaseChangeLog:
       file: db/changelog/changes/schema/20250716-02-create-card-info-table.yaml
   - include:
       file: db/changelog/changes/indexes/20250716-03-create-index-card-info-user-id.yaml
+  - include:
+      file: db/changelog/changes/schema/20250728-01-update-card-number.yaml
+  - include:
+      file: db/changelog/changes/schema/20250728-02-clear-users-and-cards.yaml
+  - include:
+      file: db/changelog/changes/schema/20250728-03-update-tables-for-entities.yaml
+  - include:
+      file: db/changelog/changes/schema/20250728-04-add-unique-constraint-to-card-number.yaml
+

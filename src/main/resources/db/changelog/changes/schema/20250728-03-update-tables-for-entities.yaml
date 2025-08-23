@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20250728-03
+      author: aleksei osinovi
+      comment: Update users and card_info tables to match entity definitions
+      changes:
+        # Update users table
+        - modifyDataType:
+            tableName: users
+            columnName: id
+            newDataType: bigint
+        - modifyDataType:
+            tableName: users
+            columnName: name
+            newDataType: varchar(32)
+        - modifyDataType:
+            tableName: users
+            columnName: surname
+            newDataType: varchar(32)
+        # Update card_info table
+        - modifyDataType:
+            tableName: card_info
+            columnName: id
+            newDataType: bigint
+        - modifyDataType:
+            tableName: card_info
+            columnName: user_id
+            newDataType: bigint
+        - modifyDataType:
+            tableName: card_info
+            columnName: holder
+            newDataType: varchar(65)
+      rollback:
+        - modifyDataType:
+            tableName: users
+            columnName: id
+            newDataType: int
+        - modifyDataType:
+            tableName: users
+            columnName: name
+            newDataType: varchar(64)
+        - modifyDataType:
+            tableName: users
+            columnName: surname
+            newDataType: varchar(64)
+        - modifyDataType:
+            tableName: card_info
+            columnName: id
+            newDataType: int
+        - modifyDataType:
+            tableName: card_info
+            columnName: user_id
+            newDataType: int
+        - modifyDataType:
+            tableName: card_info
+            columnName: holder
+            newDataType: varchar(128)
