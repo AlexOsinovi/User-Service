@@ -1,82 +1,37 @@
 package by.osinovi.userservice.integration.config;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers(disabledWithoutDocker = true)
-@ActiveProfiles("test")
 public abstract class BaseIntegrationTest {
 
     @Container
-    protected PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+    protected static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
             .withDatabaseName("user_service_test")
             .withUsername("test_user")
             .withPassword("test_password")
-            .withStartupTimeout(java.time.Duration.ofSeconds(120))
-            .withReuse(false);
+            .withStartupTimeout(java.time.Duration.ofSeconds(60))
+            .waitingFor(Wait.forLogMessage(".*database system is ready to accept connections.*\\n", 1));
 
     @Container
-    protected GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7.4.2"))
+    protected static final GenericContainer redis = new GenericContainer(DockerImageName.parse("redis:7.4.2-alpine"))
             .withExposedPorts(6379)
-            .withStartupTimeout(java.time.Duration.ofSeconds(120))
-            .withReuse(false);
+            .withStartupTimeout(java.time.Duration.ofSeconds(60))
+            .waitingFor(Wait.forLogMessage(".*Ready to accept connections.*\\n", 1));
 
-    @BeforeEach
-    void startContainers() {
-        if (!postgres.isRunning()) {
-            postgres.start();
-        }
-        if (!redis.isRunning()) {
-            redis.start();
-        }
-    }
-
-    @AfterEach
-    void stopContainers() {
-        try {
-            if (redis.isRunning()) {
-                redis.stop();
-                redis.close();
-            }
-            if (postgres.isRunning()) {
-                postgres.stop();
-                postgres.close();
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to stop containers: " + e.getMessage());
-        }
-    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
-        PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-                .withDatabaseName("user_service_test")
-                .withUsername("test_user")
-                .withPassword("test_password")
-                .withStartupTimeout(java.time.Duration.ofSeconds(120))
-                .withReuse(false);
-        if (!postgres.isRunning()) {
-            postgres.start();
-        }
-
-        GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7.4.2"))
-                .withExposedPorts(6379)
-                .withStartupTimeout(java.time.Duration.ofSeconds(120))
-                .withReuse(false);
-        if (!redis.isRunning()) {
-            redis.start();
-        }
-
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
