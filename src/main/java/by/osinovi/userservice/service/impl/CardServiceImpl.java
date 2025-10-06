@@ -39,12 +39,6 @@ public class CardServiceImpl implements CardService {
             throw new InvalidInputException("Card with number " + cardRequestDto.getNumber() + " already exists");
         }
 
-        String fullName = user.getName() + " " + user.getSurname();
-        String holder = cardRequestDto.getHolder().trim();
-        if (!holder.equalsIgnoreCase(fullName)) {
-            throw new InvalidInputException("Holder must match the user's full name: " + fullName);
-        }
-
         Card card = cardMapper.toEntity(cardRequestDto);
         card.setUser(user);
         cardRepository.save(card);
@@ -87,12 +81,6 @@ public class CardServiceImpl implements CardService {
         if (!existingCard.getNumber().equals(cardRequestDto.getNumber()) &&
                 cardRepository.existsByNumber(cardRequestDto.getNumber())) {
             throw new IllegalArgumentException("Card with number " + cardRequestDto.getNumber() + " already exists");
-        }
-
-        String fullName = user.getName().toUpperCase() + " " + user.getSurname().toUpperCase();
-        String holder = cardRequestDto.getHolder().trim();
-        if (!holder.equalsIgnoreCase(fullName)) {
-            throw new InvalidInputException("Holder must match the user's full name: " + fullName);
         }
 
         Card updatedCard = cardMapper.toEntity(cardRequestDto);

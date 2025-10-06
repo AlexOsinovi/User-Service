@@ -122,15 +122,6 @@ class CardServiceImplTests {
         verify(cardRepository, never()).save(any());
     }
 
-    @Test
-    void createCard_InvalidHolder_ThrowsException() {
-        cardRequestDto.setHolder("JANE DOE");
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(cardRepository.existsByNumber(cardRequestDto.getNumber())).thenReturn(false);
-
-        assertThrows(InvalidInputException.class, () -> cardService.createCard("1", cardRequestDto));
-        verify(cardRepository, never()).save(any());
-    }
 
     @Test
     void getCardById_CacheHit_Success() {
@@ -223,19 +214,6 @@ class CardServiceImplTests {
         when(cardRepository.existsByNumber(cardRequestDto.getNumber())).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> cardService.updateCard("1", "1", cardRequestDto));
-    }
-
-    @Test
-    void updateCard_InvalidHolder_ThrowsException() {
-        cardRequestDto.setHolder("JANE DOE");
-        cardRequestDto.setNumber("1234567890123456");
-        cardRequestDto.setExpirationDate(LocalDate.of(2025, 12, 31));
-
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(cardRepository.findById(1L)).thenReturn(Optional.of(card));
-
-        assertThrows(InvalidInputException.class, () -> cardService.updateCard("1", "1", cardRequestDto));
-        verify(cardRepository, never()).save(any());
     }
 
     @Test
